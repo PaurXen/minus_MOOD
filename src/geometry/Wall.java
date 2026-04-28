@@ -1,3 +1,5 @@
+package geometry;
+
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -17,18 +19,18 @@ public class Wall {
 
     public Rectangle getBounds() {
         return new Rectangle(
-                (int)x,
-                (int)y,
-                (int)width,
-                (int)height
+                (int) x,
+                (int) y,
+                (int) width,
+                (int) height
         );
     }
 
     public void draw(Graphics2D g2) {
         g2.setColor(Color.GRAY);
-        g2.fillRect((int)x, (int)y, (int)width, (int)height);
+        g2.fillRect((int) x, (int) y, (int) width, (int) height);
 
         g2.setColor(Color.DARK_GRAY);
-        g2.drawRect((int)x, (int)y, (int)width, (int)height);
+        g2.drawRect((int) x, (int) y, (int) width, (int) height);
     }
 }

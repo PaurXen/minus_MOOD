@@ -1,3 +1,15 @@
+package engine;
+
+import config.GameConfig;
+import config.GameSettings;
+import entities.Player;
+import geometry.LineWall;
+import geometry.Wall;
+import input.InputHandler;
+import input.KeyBindings;
+import level.Level;
+import level.LevelLoader;
+
 import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -6,42 +18,42 @@ import java.awt.Graphics2D;
 import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements Runnable {
-    public static final int WIDTH = 900;
-    public static final int HEIGHT = 600;
-
     private Thread gameThread;
     private boolean running = false;
 
-    private InputHandler input = new InputHandler();
-    private Player player = new Player(120, 120, 0);
+    private boolean showDebugText;
 
-    private ArrayList<Wall> walls = new ArrayList<>();
-    private ArrayList<LineWall> lineWalls = new ArrayList<>();
+    private final GameSettings settings;
 
-    public GamePanel() {
-        setPreferredSize(new Dimension(WIDTH, HEIGHT));
+    private InputHandler input;
+    private Player player;
+
+    private ArrayList<Wall> walls;
+    private ArrayList<LineWall> lineWalls;
+
+    private Level currentLevel;
+
+    public GamePanel(GameSettings settings) {
+        this.settings = settings;
+        this.showDebugText = settings.showDebugText;
+
+        setPreferredSize(new Dimension(settings.windowWidth, settings.windowHeight));
         setBackground(Color.BLACK);
         setFocusable(true);
+
+        KeyBindings bindings = GameConfig.loadControls("config/controls.properties");
+        input = new InputHandler(bindings);
         addKeyListener(input);
 
-        createTestMap();
+        loadLevel(settings.defaultLevel);
     }
 
-    private void createTestMap() {
-        walls.add(new Wall(250, 100, 250, 40));
-        walls.add(new Wall(250, 300, 250, 40));
-        walls.add(new Wall(100, 200, 60, 250));
-        walls.add(new Wall(600, 150, 60, 300));
+    private void loadLevel(String path) {
+        currentLevel = LevelLoader.loadLevel(path, settings.levelFormatVersion);
 
-        // Tilted test walls
-        lineWalls.add(new LineWall(300, 420, 520, 520, 18));
-        lineWalls.add(new LineWall(650, 80, 800, 230, 18));
-
-        // Border walls
-        walls.add(new Wall(0, 0, WIDTH, 20));
-        walls.add(new Wall(0, HEIGHT - 20, WIDTH, 20));
-        walls.add(new Wall(0, 0, 20, HEIGHT));
-        walls.add(new Wall(WIDTH - 20, 0, 20, HEIGHT));
+        player = currentLevel.player;
+        walls = currentLevel.walls;
+        lineWalls = currentLevel.lineWalls;
     }
 
     public void startGameLoop() {
@@ -52,7 +64,7 @@ public class GamePanel extends JPanel implements Runnable {
 
     @Override
     public void run() {
-        final double targetFPS = 60.0;
+        final double targetFPS = settings.targetFPS;
         final double drawInterval = 1_000_000_000.0 / targetFPS;
 
         long lastTime = System.nanoTime();
@@ -79,6 +91,10 @@ public class GamePanel extends JPanel implements Runnable {
     }
 
     private void update(double deltaTime) {
+        if (input.consumeDebugToggleRequest()) {
+            showDebugText = !showDebugText;
+        }
+
         handleRotation(deltaTime);
         handleMovement(deltaTime);
     }
@@ -134,6 +150,7 @@ public class GamePanel extends JPanel implements Runnable {
             movePlayer(moveX * speed, moveY * speed);
         }
     }
+
     private void movePlayer(double dx, double dy) {
         double newX = player.x + dx;
         double newY = player.y + dy;
@@ -145,6 +162,65 @@ public class GamePanel extends JPanel implements Runnable {
         if (!collidesWithWall(player.x, newY)) {
             player.y = newY;
         }
+    }
+
+    private boolean collidesWithWall(double x, double y) {
+        for (Wall wall : walls) {
+            if (circleIntersectsRectangle(
+                    x,
+                    y,
+                    player.radius,
+                    wall.x,
+                    wall.y,
+                    wall.width,
+                    wall.height
+            )) {
+                return true;
+            }
+        }
+
+        return collidesWithLineWall(x, y);
+    }
+
+    private boolean collidesWithLineWall(double x, double y) {
+        for (LineWall wall : lineWalls) {
+            double distance = distancePointToSegment(
+                    x,
+                    y,
+                    wall.x1,
+                    wall.y1,
+                    wall.x2,
+                    wall.y2
+            );
+
+            double collisionDistance = player.radius + wall.thickness / 2.0;
+
+            if (distance < collisionDistance) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private boolean circleIntersectsRectangle(
+            double circleX,
+            double circleY,
+            double radius,
+            double rectX,
+            double rectY,
+            double rectWidth,
+            double rectHeight
+    ) {
+        double closestX = clamp(circleX, rectX, rectX + rectWidth);
+        double closestY = clamp(circleY, rectY, rectY + rectHeight);
+
+        double distanceX = circleX - closestX;
+        double distanceY = circleY - closestY;
+
+        double distanceSquared = distanceX * distanceX + distanceY * distanceY;
+
+        return distanceSquared < radius * radius;
     }
 
     private double distancePointToSegment(
@@ -182,69 +258,6 @@ public class GamePanel extends JPanel implements Runnable {
         return Math.sqrt(dx * dx + dy * dy);
     }
 
-    private boolean collidesWithLineWall(double x, double y) {
-        for (LineWall wall : lineWalls) {
-            double distance = distancePointToSegment(
-                    x,
-                    y,
-                    wall.x1,
-                    wall.y1,
-                    wall.x2,
-                    wall.y2
-            );
-
-            double collisionDistance = player.radius + wall.thickness / 2.0;
-
-            if (distance < collisionDistance) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    private boolean collidesWithWall(double x, double y) {
-        for (Wall wall : walls) {
-            if (circleIntersectsRectangle(
-                    x,
-                    y,
-                    player.radius,
-                    wall.x,
-                    wall.y,
-                    wall.width,
-                    wall.height
-            )) {
-                return true;
-            }
-        }
-
-        if (collidesWithLineWall(x, y)) {
-            return true;
-        }
-
-        return false;
-    }
-
-    private boolean circleIntersectsRectangle(
-            double circleX,
-            double circleY,
-            double radius,
-            double rectX,
-            double rectY,
-            double rectWidth,
-            double rectHeight
-    ) {
-        double closestX = clamp(circleX, rectX, rectX + rectWidth);
-        double closestY = clamp(circleY, rectY, rectY + rectHeight);
-
-        double distanceX = circleX - closestX;
-        double distanceY = circleY - closestY;
-
-        double distanceSquared = distanceX * distanceX + distanceY * distanceY;
-
-        return distanceSquared < radius * radius;
-    }
-
     private double clamp(double value, double min, double max) {
         return Math.max(min, Math.min(max, value));
     }
@@ -258,12 +271,15 @@ public class GamePanel extends JPanel implements Runnable {
         drawBackground(g2);
         drawWalls(g2);
         drawPlayer(g2);
-        drawDebugInfo(g2);
+
+        if (showDebugText) {
+            drawDebugInfo(g2);
+        }
     }
 
     private void drawBackground(Graphics2D g2) {
         g2.setColor(Color.BLACK);
-        g2.fillRect(0, 0, WIDTH, HEIGHT);
+        g2.fillRect(0, 0, settings.windowWidth, settings.windowHeight);
     }
 
     private void drawWalls(Graphics2D g2) {
@@ -281,11 +297,9 @@ public class GamePanel extends JPanel implements Runnable {
         int py = (int) player.y;
         int r = (int) player.radius;
 
-        // Player circle
         g2.setColor(Color.RED);
         g2.fillOval(px - r, py - r, r * 2, r * 2);
 
-        // Direction line
         int lineLength = 35;
         int endX = (int) (player.x + Math.cos(player.angle) * lineLength);
         int endY = (int) (player.y + Math.sin(player.angle) * lineLength);
@@ -297,12 +311,20 @@ public class GamePanel extends JPanel implements Runnable {
     private void drawDebugInfo(Graphics2D g2) {
         g2.setColor(Color.WHITE);
 
-        g2.drawString("W/S: forward/backward", 20, 25);
-        g2.drawString("A/D: strafe left/right", 20, 45);
-        g2.drawString("Left/Right arrows: rotate", 20, 65);
+        g2.drawString(
+                settings.gameTitle + " v" + settings.gameVersion + " [" + settings.gameBuild + "]",
+                20,
+                25
+        );
 
-        g2.drawString("Player X: " + String.format("%.2f", player.x), 20, 100);
-        g2.drawString("Player Y: " + String.format("%.2f", player.y), 20, 120);
-        g2.drawString("Angle: " + String.format("%.2f", player.angle), 20, 140);
+        g2.drawString("W/S: forward/backward", 20, 50);
+        g2.drawString("A/D: strafe left/right", 20, 70);
+        g2.drawString("Left/Right arrows: rotate", 20, 90);
+
+        g2.drawString("Player X: " + String.format("%.2f", player.x), 20, 125);
+        g2.drawString("Player Y: " + String.format("%.2f", player.y), 20, 145);
+        g2.drawString("Angle: " + String.format("%.2f", player.angle), 20, 165);
+        g2.drawString("Level: " + currentLevel.name + " v" + currentLevel.version, 20, 185);
+        g2.drawString("Debug toggle: `", 20, 205);
     }
 }
