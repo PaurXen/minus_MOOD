@@ -3,12 +3,12 @@ package engine;
 import config.GameConfig;
 import config.GameSettings;
 import entities.Player;
-import geometry.LineWall;
-import geometry.Wall;
+import map.LineWall;
+import map.Wall;
 import input.InputHandler;
-import input.KeyBindings;
-import level.Level;
-import level.LevelLoader;
+import config.KeyBindings;
+import io.Level;
+import io.LevelLoader;
 
 import javax.swing.JPanel;
 import java.awt.Color;
