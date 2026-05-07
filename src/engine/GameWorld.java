@@ -8,9 +8,11 @@ import entities.Player;
 import input.InputHandler;
 import io.Level;
 import io.LevelLoader;
+import map.LineDef;
 import map.LineWall;
+import map.MapData;
+import map.TestMapFactory;
 import map.Wall;
-import math.Vec2;
 
 import java.util.List;
 
@@ -19,6 +21,8 @@ public class GameWorld {
 
     private Level currentLevel;
     private Player player;
+
+    private MapData mapData;
 
     private CollisionWorld collisionWorld;
     private CollisionBody playerBody;
@@ -33,14 +37,24 @@ public class GameWorld {
     }
 
     public void loadLevel(String path) {
+        /*
+         * Temporary transition:
+         *
+         * LevelLoader still loads the old level format so player settings,
+         * level name, debug info, and existing config keep working.
+         *
+         * The actual collision/drawing map is now hardcoded MapData.
+         *
+         * Later:
+         * LevelLoader -> LevelParser -> MapCompiler -> MapData
+         */
         currentLevel = LevelLoader.loadLevel(path, settings.levelFormatVersion);
 
         player = currentLevel.player;
 
-        collisionWorld = new CollisionWorld(
-                currentLevel.walls,
-                currentLevel.lineWalls
-        );
+        mapData = TestMapFactory.createTestMap();
+
+        collisionWorld = new CollisionWorld(mapData);
 
         playerBody = player.getBody();
     }
@@ -118,17 +132,20 @@ public class GameWorld {
         player.setPosition(result.finalPosition);
     }
 
-    private void syncPlayerBodyFromPlayer() {
-        playerBody.radius = player.getRadius();
-        playerBody.setPosition(new Vec2(player.getX(), player.getY()));
-    }
-
     public Level getCurrentLevel() {
         return currentLevel;
     }
 
     public Player getPlayer() {
         return player;
+    }
+
+    public MapData getMapData() {
+        return mapData;
+    }
+
+    public List<LineDef> getMapLines() {
+        return mapData.getLineDefs();
     }
 
     public CollisionWorld getCollisionWorld() {
@@ -139,6 +156,10 @@ public class GameWorld {
         return playerBody;
     }
 
+    /*
+     * Legacy accessors kept temporarily.
+     * GamePanel should now draw MapData instead of these.
+     */
     public List<Wall> getWalls() {
         return currentLevel.walls;
     }

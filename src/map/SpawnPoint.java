@@ -15,6 +15,14 @@ public class SpawnPoint {
         this(id, type, new Vec2(x, y), angle, null);
     }
 
+    public SpawnPoint(int id, SpawnType type, double x, double y, double angle, Sector sector) {
+        this(id, type, new Vec2(x, y), angle, null);
+    }
+
+    public  SpawnPoint(int id, SpawnType type, Vec2 position, double angle) {
+        this(id, type, position, angle, null);
+    }
+
     public SpawnPoint(int id, SpawnType type, Vec2 position, double angle, Sector sector) {
         if (type == null) {
             throw new IllegalArgumentException("SpawnPoint type cannot be null.");
