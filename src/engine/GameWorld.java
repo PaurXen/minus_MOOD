@@ -42,11 +42,7 @@ public class GameWorld {
                 currentLevel.lineWalls
         );
 
-        playerBody = new CollisionBody(
-                player.getX(),
-                player.getY(),
-                player.getRadius()
-        );
+        playerBody = player.getBody();
     }
 
     public void update(InputHandler input, double deltaTime) {
