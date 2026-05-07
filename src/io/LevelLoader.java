@@ -40,11 +40,12 @@ public class LevelLoader {
         double playerY = getDouble(properties, "player_y", 120);
         double playerAngle = getDouble(properties, "player_angle", 0);
 
-        level.player = new Player(playerX, playerY, playerAngle);
+        double playerRadius = getDouble(properties, "player_radius", 6);
+
+        level.player = new Player(playerX, playerY, playerAngle, playerRadius);
 
         level.player.moveSpeed = getDouble(properties, "player_speed", 180);
         level.player.rotationSpeed = getDouble(properties, "player_rotation_speed", 2.5);
-        level.player.radius = getDouble(properties, "player_radius", 6);
 
         int rectWallCount = getInt(properties, "rect_wall_count", 0);
 

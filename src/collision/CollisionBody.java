@@ -53,6 +53,10 @@ public class CollisionBody {
         return position.y;
     }
 
+    public Vec2 getPosition() {
+        return position;
+    }
+
     public  void setPosition(Vec2 newPosition) {
         this.position = newPosition;
     }

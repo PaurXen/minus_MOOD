@@ -111,16 +111,16 @@ public class GamePanel extends JPanel {
             return;
         }
 
-        int px = (int) player.x;
-        int py = (int) player.y;
-        int r = (int) player.radius;
+        int px = (int) player.getX();
+        int py = (int) player.getY();
+        int r = (int) player.getRadius();
 
         g2.setColor(Color.RED);
         g2.fillOval(px - r, py - r, r * 2, r * 2);
 
         int lineLength = 35;
-        int endX = (int) (player.x + Math.cos(player.angle) * lineLength);
-        int endY = (int) (player.y + Math.sin(player.angle) * lineLength);
+        int endX = (int) (player.getX() + Math.cos(player.angle) * lineLength);
+        int endY = (int) (player.getY() + Math.sin(player.angle) * lineLength);
 
         g2.setColor(Color.YELLOW);
         g2.drawLine(px, py, endX, endY);
@@ -146,8 +146,8 @@ public class GamePanel extends JPanel {
         g2.drawString("A/D: strafe left/right", 20, 70);
         g2.drawString("Left/Right arrows: rotate", 20, 90);
 
-        g2.drawString("Player X: " + String.format("%.2f", player.x), 20, 125);
-        g2.drawString("Player Y: " + String.format("%.2f", player.y), 20, 145);
+        g2.drawString("Player X: " + String.format("%.2f", player.getX()), 20, 125);
+        g2.drawString("Player Y: " + String.format("%.2f", player.getY()), 20, 145);
         g2.drawString("Angle: " + String.format("%.2f", player.angle), 20, 165);
 
         g2.drawString(

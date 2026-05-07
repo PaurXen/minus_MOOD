@@ -43,9 +43,9 @@ public class GameWorld {
         );
 
         playerBody = new CollisionBody(
-                player.x,
-                player.y,
-                player.radius
+                player.getX(),
+                player.getY(),
+                player.getRadius()
         );
     }
 
@@ -113,21 +113,18 @@ public class GameWorld {
     }
 
     private void movePlayer(double dx, double dy) {
-        syncPlayerBodyFromPlayer();
-
         CollisionResult result = collisionWorld.moveAndApply(
-                playerBody,
+                player.getBody(),
                 dx,
                 dy
         );
 
-        player.x = result.finalPosition.x;
-        player.y = result.finalPosition.y;
+        player.setPosition(result.finalPosition);
     }
 
     private void syncPlayerBodyFromPlayer() {
-        playerBody.radius = player.radius;
-        playerBody.setPosition(new Vec2(player.x, player.y));
+        playerBody.radius = player.getRadius();
+        playerBody.setPosition(new Vec2(player.getX(), player.getY()));
     }
 
     public Level getCurrentLevel() {
