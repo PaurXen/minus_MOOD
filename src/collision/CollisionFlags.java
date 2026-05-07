@@ -1,6 +1,6 @@
 package collision;
 
-public enum CollisionFlag {
+public enum CollisionFlags {
     BLOCKING,
     TRIGGER,
     TRANSPARENT,
