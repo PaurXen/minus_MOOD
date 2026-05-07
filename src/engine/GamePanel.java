@@ -159,7 +159,7 @@ public class GamePanel extends JPanel {
         g2.drawString("Debug toggle: `", 20, 205);
 
         g2.drawString(
-                "Collision body: radius=" + String.format("%.2f", gameWorld.getPlayerBody().radius),
+                "Collision body: radius=" + String.format("%.2f", player.getRadius()),
                 20,
                 225
         );
