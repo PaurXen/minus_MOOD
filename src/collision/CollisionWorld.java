@@ -53,9 +53,9 @@ public class CollisionWorld {
         return move(body, new Vec2(dx, dy));
     }
 
-    public CollisionResult move (CollisionBody body, Vec2 movment) {
+    public CollisionResult move(CollisionBody body, Vec2 movement) {
         Vec2 startPosition = body.position;
-        Vec2 requestedPosition = startPosition.add(movment);
+        Vec2 requestedPosition = startPosition.add(movement);
 
         double finalX = startPosition.x;
         double finalY = startPosition.y;
