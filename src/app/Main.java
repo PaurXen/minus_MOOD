@@ -1,3 +1,5 @@
+package app;
+
 import config.GameConfig;
 import config.GameSettings;
 import engine.GamePanel;

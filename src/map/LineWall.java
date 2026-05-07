@@ -1,4 +1,4 @@
-package geometry;
+package map;
 
 import java.awt.Color;
 import java.awt.Graphics2D;

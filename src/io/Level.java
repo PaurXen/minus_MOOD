@@ -1,8 +1,8 @@
-package level;
+package io;
 
 import entities.Player;
-import geometry.LineWall;
-import geometry.Wall;
+import map.LineWall;
+import map.Wall;
 
 import java.util.ArrayList;
 

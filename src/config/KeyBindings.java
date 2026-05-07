@@ -1,4 +1,4 @@
-package input;
+package config;
 
 public class KeyBindings {
     public int moveForward;
