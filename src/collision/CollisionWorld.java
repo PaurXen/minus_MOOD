@@ -164,7 +164,7 @@ public class CollisionWorld {
     }
 
     private boolean collidesWithLineDefs(Vec2 position, double radius) {
-        for (LineDef lineDef : mapData.getCollisionLines()) {
+        for (LineDef lineDef : mapData.getLineDefs()) {
             if (!lineDef.blocksMovement()) {
                 continue;
             }
