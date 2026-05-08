@@ -68,9 +68,7 @@ public final class TestMapFactory {
         solidLine(mapData, 8, v8, v9, mainSector, innerWallSide, 16);
 
         /*
-         * Player spawn reference for future use.
-         * GameWorld still currently uses the loaded level player,
-         * but raycasting/map systems can already see this spawn.
+         * Player spawn used by GameWorld when creating the runtime player.
          */
 
         mapData.addSpawnPoint(new SpawnPoint(
