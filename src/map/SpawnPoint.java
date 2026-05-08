@@ -16,10 +16,10 @@ public class SpawnPoint {
     }
 
     public SpawnPoint(int id, SpawnType type, double x, double y, double angle, Sector sector) {
-        this(id, type, new Vec2(x, y), angle, null);
+        this(id, type, new Vec2(x, y), angle, sector);
     }
 
-    public  SpawnPoint(int id, SpawnType type, Vec2 position, double angle) {
+    public SpawnPoint(int id, SpawnType type, Vec2 position, double angle) {
         this(id, type, position, angle, null);
     }
 

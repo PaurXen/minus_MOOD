@@ -50,10 +50,10 @@ public final class TestMapFactory {
 
         Vertex v4 = vertex(mapData, 4, 300, 180);
         Vertex v5 = vertex(mapData, 5, 500, 180);
-        Vertex v6 = vertex(mapData, 6, 700, 320);
+        Vertex v6 = vertex(mapData, 6, 700, 420);
         Vertex v7 = vertex(mapData, 7, 300, 320);
 
-        solidLine(mapData, 4, v4, v5, mainSector, innerWallSide, 0);
+        solidLine(mapData, 4, v4, v5, mainSector, innerWallSide, 5);
         solidLine(mapData, 5, v5, v6, mainSector, innerWallSide, 0);
         solidLine(mapData, 6, v6, v7, mainSector, innerWallSide, 0);
         solidLine(mapData, 7, v7, v4, mainSector, innerWallSide, 0);

@@ -5,7 +5,7 @@ import config.GameSettings;
 import config.KeyBindings;
 import entities.Player;
 import input.InputHandler;
-import io.Level;
+import map.Level;
 import map.LineDef;
 import map.Vertex;
 
@@ -175,7 +175,7 @@ public class GamePanel extends JPanel {
         g2.drawString("Angle: " + String.format("%.2f", player.angle), 20, 165);
 
         g2.drawString(
-                "Level: " + level.name + " v" + level.version,
+                "Level: " + level.getName() + " v" + level.getVersion(),
                 20,
                 185
         );

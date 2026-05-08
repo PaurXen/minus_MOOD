@@ -6,13 +6,11 @@ import collision.CollisionWorld;
 import config.GameSettings;
 import entities.Player;
 import input.InputHandler;
-import io.Level;
 import io.LevelLoader;
+import map.Level;
 import map.LineDef;
-import map.LineWall;
 import map.MapData;
-import map.TestMapFactory;
-import map.Wall;
+import map.SpawnPoint;
 
 import java.util.List;
 
@@ -37,26 +35,33 @@ public class GameWorld {
     }
 
     public void loadLevel(String path) {
-        /*
-         * Temporary transition:
-         *
-         * LevelLoader still loads the old level format so player settings,
-         * level name, debug info, and existing config keep working.
-         *
-         * The actual collision/drawing map is now hardcoded MapData.
-         *
-         * Later:
-         * LevelLoader -> LevelParser -> MapCompiler -> MapData
-         */
         currentLevel = LevelLoader.loadLevel(path, settings.levelFormatVersion);
 
-        player = currentLevel.player;
+        mapData = currentLevel.mapData;
 
-        mapData = TestMapFactory.createTestMap();
+        player = createPlayerFromLevel(currentLevel);
 
         collisionWorld = new CollisionWorld(mapData);
 
         playerBody = player.getBody();
+    }
+
+    private Player createPlayerFromLevel(Level level) {
+        SpawnPoint spawn = level.playerSpawn;
+
+        Player createdPlayer = new Player(
+                spawn.getX(),
+                spawn.getY(),
+                spawn.angle,
+                level.playerRadius
+        );
+
+        createdPlayer.moveSpeed = level.playerMoveSpeed;
+        createdPlayer.rotationSpeed = level.playerRotationSpeed;
+        createdPlayer.setHeight(level.playerHeight);
+        createdPlayer.setStepHeight(level.playerStepHeight);
+
+        return createdPlayer;
     }
 
     public void update(InputHandler input, double deltaTime) {
@@ -154,17 +159,5 @@ public class GameWorld {
 
     public CollisionBody getPlayerBody() {
         return playerBody;
-    }
-
-    /*
-     * Legacy accessors kept temporarily.
-     * GamePanel should now draw MapData instead of these.
-     */
-    public List<Wall> getWalls() {
-        return currentLevel.walls;
-    }
-
-    public List<LineWall> getLineWalls() {
-        return currentLevel.lineWalls;
     }
 }
