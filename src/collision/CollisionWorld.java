@@ -1,28 +1,56 @@
 package collision;
 
-// TODO: TBC: Walls and LineWalls will be replaced by graph based collision system, but for now this is a simple implementation to get things working.
+import map.LegacyMapAdapter;
+import map.LineDef;
 import map.LineWall;
-import  map.Wall;
+import map.MapData;
+import map.Wall;
 import math.GeometryMath;
 import math.Segment2D;
 import math.Vec2;
 
-import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 
 public class CollisionWorld {
+    private MapData mapData;
+
+    // Temporary legacy fields.
+    // These exist only so the current Wall/LineWall level format keeps working.
     private List<Wall> walls;
     private List<LineWall> lineWalls;
 
     public CollisionWorld() {
-        this.walls = new ArrayList<>();
-        this.lineWalls = new ArrayList<>();
+        this(new MapData());
+    }
+
+    public CollisionWorld(MapData mapData) {
+        setMapData(mapData);
+        this.walls = Collections.emptyList();
+        this.lineWalls = Collections.emptyList();
     }
 
     public CollisionWorld(List<Wall> walls, List<LineWall> lineWalls) {
+        setLegacyGeometry(walls, lineWalls);
+    }
+
+    public void setMapData(MapData mapData) {
+        if (mapData == null) {
+            this.mapData = new MapData();
+        } else {
+            this.mapData = mapData;
+        }
+    }
+
+    public MapData getMapData() {
+        return mapData;
+    }
+
+    public void setLegacyGeometry(List<Wall> walls, List<LineWall> lineWalls) {
         setWalls(walls);
         setLineWalls(lineWalls);
+        rebuildMapDataFromLegacyGeometry();
     }
 
     public void setWalls(List<Wall> walls) {
@@ -42,11 +70,15 @@ public class CollisionWorld {
     }
 
     public List<Wall> getWalls() {
-        return walls;
+        return Collections.unmodifiableList(walls);
     }
 
     public List<LineWall> getLineWalls() {
-        return lineWalls;
+        return Collections.unmodifiableList(lineWalls);
+    }
+
+    private void rebuildMapDataFromLegacyGeometry() {
+        this.mapData = LegacyMapAdapter.fromLegacyWalls(walls, lineWalls);
     }
 
     public CollisionResult move(CollisionBody body, double dx, double dy) {
@@ -80,7 +112,14 @@ public class CollisionWorld {
         if (!blockedX && !blockedY) {
             return CollisionResult.noCollision(startPosition, requestedPosition);
         }
-        return CollisionResult.blocked(startPosition, requestedPosition, finalPosition, blockedX, blockedY);
+
+        return CollisionResult.blocked(
+                startPosition,
+                requestedPosition,
+                finalPosition,
+                blockedX,
+                blockedY
+        );
     }
 
     public CollisionResult moveAndApply(CollisionBody body, double dx, double dy) {
@@ -102,11 +141,11 @@ public class CollisionWorld {
     }
 
     public boolean isPositionBlocked(Vec2 position, double radius) {
-        return collidesWithWalls(position, radius)
-                || collidesWithLineWalls(position, radius);
+        return collidesWithLegacyWalls(position, radius)
+                || collidesWithLineDefs(position, radius);
     }
 
-    private boolean collidesWithWalls(Vec2 position, double radius) {
+    private boolean collidesWithLegacyWalls(Vec2 position, double radius) {
         for (Wall wall : walls) {
             if (GeometryMath.circleIntersectsRectangle(
                     position.x,
@@ -118,29 +157,22 @@ public class CollisionWorld {
                     wall.height
             )) {
                 return true;
-
             }
         }
 
         return false;
     }
 
-    private boolean collidesWithLineWalls(Vec2 position, double radius) {
-        for (LineWall wall : lineWalls) {
-            Segment2D segment = new Segment2D(
-                    wall.x1,
-                    wall.y1,
-                    wall.x2,
-                    wall.y2
-            );
+    private boolean collidesWithLineDefs(Vec2 position, double radius) {
+        for (LineDef lineDef : mapData.getLineDefs()) {
+            if (!lineDef.blocksMovement()) {
+                continue;
+            }
 
-            double collisionRadius = radius + wall.thickness / 2.0;
+            Segment2D segment = lineDef.getSegment();
+            double collisionRadius = radius + lineDef.getCollisionThickness() / 2.0;
 
-            if (GeometryMath.circleIntersectsSegment(
-                    position,
-                    collisionRadius,
-                    segment
-            )) {
+            if (GeometryMath.circleIntersectsSegment(position, collisionRadius, segment)) {
                 return true;
             }
         }

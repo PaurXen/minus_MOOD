@@ -5,15 +5,17 @@ import config.GameSettings;
 import config.KeyBindings;
 import entities.Player;
 import input.InputHandler;
-import io.Level;
-import map.LineWall;
-import map.Wall;
+import map.Level;
+import map.LineDef;
+import map.Vertex;
 
 import javax.swing.JPanel;
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Stroke;
 
 public class GamePanel extends JPanel {
     private final GameSettings settings;
@@ -81,11 +83,12 @@ public class GamePanel extends JPanel {
         Graphics2D g2 = (Graphics2D) g;
 
         drawBackground(g2);
-        drawWalls(g2);
+        drawMap(g2);
         drawPlayer(g2);
 
         if (showDebugText) {
             drawDebugInfo(g2);
+            drawMapDebug(g2);
         }
     }
 
@@ -94,14 +97,35 @@ public class GamePanel extends JPanel {
         g2.fillRect(0, 0, settings.windowWidth, settings.windowHeight);
     }
 
-    private void drawWalls(Graphics2D g2) {
-        for (Wall wall : gameWorld.getWalls()) {
-            wall.draw(g2);
+    private void drawMap(Graphics2D g2) {
+        Stroke oldStroke = g2.getStroke();
+
+        for (LineDef lineDef : gameWorld.getMapLines()) {
+            float thickness = 3.0f;
+
+            if (lineDef.getCollisionThickness() > 0) {
+                thickness = (float) lineDef.getCollisionThickness();
+            }
+
+            if (lineDef.blocksMovement()) {
+                g2.setColor(Color.GRAY);
+            } else if (lineDef.isTrigger()) {
+                g2.setColor(Color.GREEN);
+            } else {
+                g2.setColor(Color.DARK_GRAY);
+            }
+
+            g2.setStroke(new BasicStroke(thickness));
+
+            g2.drawLine(
+                    (int) lineDef.start.x,
+                    (int) lineDef.start.y,
+                    (int) lineDef.end.x,
+                    (int) lineDef.end.y
+            );
         }
 
-        for (LineWall lineWall : gameWorld.getLineWalls()) {
-            lineWall.draw(g2);
-        }
+        g2.setStroke(oldStroke);
     }
 
     private void drawPlayer(Graphics2D g2) {
@@ -151,7 +175,7 @@ public class GamePanel extends JPanel {
         g2.drawString("Angle: " + String.format("%.2f", player.angle), 20, 165);
 
         g2.drawString(
-                "Level: " + level.name + " v" + level.version,
+                "Level: " + level.getName() + " v" + level.getVersion(),
                 20,
                 185
         );
@@ -163,5 +187,44 @@ public class GamePanel extends JPanel {
                 20,
                 225
         );
+
+        g2.drawString(
+                "MapData lines: " + gameWorld.getMapData().getLineDefs().size(),
+                20,
+                245
+        );
+
+        g2.drawString(
+                "Collision lines: " + gameWorld.getMapData().getCollisionLines().size(),
+                20,
+                265
+        );
+
+        g2.drawString(
+                "Raycast lines: " + gameWorld.getMapData().getRaycastLines().size(),
+                20,
+                285
+        );
+    }
+
+    private void drawMapDebug(Graphics2D g2) {
+        g2.setColor(Color.CYAN);
+
+        for (Vertex vertex : gameWorld.getMapData().getVertices()) {
+            int x = (int) vertex.x;
+            int y = (int) vertex.y;
+
+            g2.fillOval(x - 3, y - 3, 6, 6);
+            g2.drawString(String.valueOf(vertex.id), x + 5, y - 5);
+        }
+
+        g2.setColor(Color.ORANGE);
+
+        for (LineDef lineDef : gameWorld.getMapLines()) {
+            int midX = (int) ((lineDef.start.x + lineDef.end.x) / 2.0);
+            int midY = (int) ((lineDef.start.y + lineDef.end.y) / 2.0);
+
+            g2.drawString("L" + lineDef.id, midX + 4, midY + 4);
+        }
     }
 }

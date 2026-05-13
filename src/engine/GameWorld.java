@@ -6,11 +6,11 @@ import collision.CollisionWorld;
 import config.GameSettings;
 import entities.Player;
 import input.InputHandler;
-import io.Level;
 import io.LevelLoader;
-import map.LineWall;
-import map.Wall;
-import math.Vec2;
+import map.Level;
+import map.LineDef;
+import map.MapData;
+import map.SpawnPoint;
 
 import java.util.List;
 
@@ -19,6 +19,8 @@ public class GameWorld {
 
     private Level currentLevel;
     private Player player;
+
+    private MapData mapData;
 
     private CollisionWorld collisionWorld;
     private CollisionBody playerBody;
@@ -35,14 +37,31 @@ public class GameWorld {
     public void loadLevel(String path) {
         currentLevel = LevelLoader.loadLevel(path, settings.levelFormatVersion);
 
-        player = currentLevel.player;
+        mapData = currentLevel.mapData;
 
-        collisionWorld = new CollisionWorld(
-                currentLevel.walls,
-                currentLevel.lineWalls
-        );
+        player = createPlayerFromLevel(currentLevel);
+
+        collisionWorld = new CollisionWorld(mapData);
 
         playerBody = player.getBody();
+    }
+
+    private Player createPlayerFromLevel(Level level) {
+        SpawnPoint spawn = level.playerSpawn;
+
+        Player createdPlayer = new Player(
+                spawn.getX(),
+                spawn.getY(),
+                spawn.angle,
+                level.playerRadius
+        );
+
+        createdPlayer.moveSpeed = level.playerMoveSpeed;
+        createdPlayer.rotationSpeed = level.playerRotationSpeed;
+        createdPlayer.setHeight(level.playerHeight);
+        createdPlayer.setStepHeight(level.playerStepHeight);
+
+        return createdPlayer;
     }
 
     public void update(InputHandler input, double deltaTime) {
@@ -118,11 +137,6 @@ public class GameWorld {
         player.setPosition(result.finalPosition);
     }
 
-    private void syncPlayerBodyFromPlayer() {
-        playerBody.radius = player.getRadius();
-        playerBody.setPosition(new Vec2(player.getX(), player.getY()));
-    }
-
     public Level getCurrentLevel() {
         return currentLevel;
     }
@@ -131,19 +145,19 @@ public class GameWorld {
         return player;
     }
 
+    public MapData getMapData() {
+        return mapData;
+    }
+
+    public List<LineDef> getMapLines() {
+        return mapData.getLineDefs();
+    }
+
     public CollisionWorld getCollisionWorld() {
         return collisionWorld;
     }
 
     public CollisionBody getPlayerBody() {
         return playerBody;
-    }
-
-    public List<Wall> getWalls() {
-        return currentLevel.walls;
-    }
-
-    public List<LineWall> getLineWalls() {
-        return currentLevel.lineWalls;
     }
 }
