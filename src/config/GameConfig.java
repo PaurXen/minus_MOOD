@@ -67,6 +67,13 @@ public class GameConfig {
         bindings.rotateLeft = keyCode(properties.getProperty("rotate_left", "LEFT"));
         bindings.rotateRight = keyCode(properties.getProperty("rotate_right", "RIGHT"));
 
+        bindings.attack = keyCode(properties.getProperty("attack", "SPACE"));
+
+        bindings.menuUp = keyCode(properties.getProperty("menu_up", "UP"));
+        bindings.menuDown = keyCode(properties.getProperty("menu_down", "DOWN"));
+        bindings.confirm = keyCode(properties.getProperty("confirm", "ENTER"));
+        bindings.cancel = keyCode(properties.getProperty("cancel", "ESCAPE"));
+
         bindings.toggleDebug = keyCode(properties.getProperty("toggle_debug", "BACK_QUOTE"));
 
         return bindings;
@@ -90,6 +97,9 @@ public class GameConfig {
             case "SHIFT" -> KeyEvent.VK_SHIFT;
             case "CONTROL", "CTRL" -> KeyEvent.VK_CONTROL;
             case "E" -> KeyEvent.VK_E;
+
+            case "ENTER", "RETURN" -> KeyEvent.VK_ENTER;
+            case "ESCAPE", "ESC" -> KeyEvent.VK_ESCAPE;
 
             case "BACK_QUOTE", "`", "GRAVE" -> KeyEvent.VK_BACK_QUOTE;
 
