@@ -18,13 +18,15 @@ public interface GameState {
     void enter();
 
     /** Called when this state is removed from the stack. */
-    void exit();
+    default void exit() {
+        // Most states don't need cleanup — override as needed.
+    }
 
     /**
      * Per-frame logic update.
      *
      * @param deltaTime seconds since last update
-     * @param input     shared input handler (may be null for non-interactive states)
+     * @param input     shared input handler (maybe null for non-interactive states)
      */
     void update(double deltaTime, InputHandler input);
 

@@ -74,9 +74,7 @@ public class Enemy extends Entity {
                     active = false;
                 }
             }
-            default -> {
-                attackTimer = Math.max(0, attackTimer - deltaTime);
-            }
+            default -> attackTimer = Math.max(0, attackTimer - deltaTime);
         }
     }
 

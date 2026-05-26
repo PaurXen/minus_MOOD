@@ -45,11 +45,6 @@ public class MainMenuState implements GameState {
     }
 
     @Override
-    public void exit() {
-        // nothing to clean up
-    }
-
-    @Override
     public void update(double deltaTime, InputHandler input) {
         if (input == null) {
             return;
@@ -84,18 +79,12 @@ public class MainMenuState implements GameState {
 
     private void selectOption(int index) {
         switch (index) {
-            case 0 -> {
-                // New Game — transition to gameplay
-                manager.replace(new PlayingState(manager, windowWidth, windowHeight));
-            }
-            case 1 -> {
-                // Options — push on top of menu
-                manager.push(new OptionsState(manager, windowWidth, windowHeight));
-            }
-            case 2 -> {
-                // Quit
-                System.exit(0);
-            }
+            // New Game — transition to gameplay
+            case 0 -> manager.replace(new PlayingState(manager, windowWidth, windowHeight));
+            // Options — push on top of menu
+            case 1 -> manager.push(new OptionsState(manager, windowWidth, windowHeight));
+            // Quit
+            case 2 -> System.exit(0);
         }
     }
 

@@ -122,11 +122,6 @@ public class PlayingState implements GameState {
     }
 
     @Override
-    public void exit() {
-        // No resources to release for now
-    }
-
-    @Override
     public void update(double deltaTime, InputHandler input) {
         if (input == null) {
             return;

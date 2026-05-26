@@ -14,7 +14,7 @@ import math.Vec2;
  *   <li>Always detects the player (no line-of-sight check yet — Phase 4).</li>
  *   <li>Moves toward the player using {@link CollisionWorld#moveAndApply} for
  *       wall-sliding collision resolution.</li>
- *   <li>When within {@link EnemyConfig#attackRange}, transitions to ATTACK state.</li>
+ *   <li>When within attack range (see {@link Enemy#getAttackRange()}), transitions to ATTACK state.</li>
  *   <li>After each attack, cooldown is handled by {@link Enemy#canAttack()} /
  *       {@link Enemy#resetAttackTimer()}.</li>
  * </ol>
@@ -34,11 +34,9 @@ public class BasicChaseAI implements EnemyAI {
         double dist = enemy.getPosition().distanceTo(player.getPosition());
 
         switch (enemy.getState()) {
-            case IDLE, PATROL -> {
-                // Always detect the player in Phase 2.
-                // Line-of-sight checks will be added when raycasting is ready (Phase 4).
-                enemy.setState(EnemyState.CHASE);
-            }
+            // Always detect the player in Phase 2.
+            // Line-of-sight checks will be added when raycasting is ready (Phase 4).
+            case IDLE, PATROL -> enemy.setState(EnemyState.CHASE);
 
             case CHASE -> {
                 if (dist <= enemy.getAttackRange()) {

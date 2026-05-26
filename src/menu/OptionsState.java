@@ -9,7 +9,7 @@ import java.awt.Graphics2D;
  * Controls reference and settings screen.
  *
  * <p>Can be pushed from {@link MainMenuState} or {@link PauseState}.
- * Currently displays the keyboard control scheme. Future versions
+ * Displays the keyboard control scheme. Future versions
  * may include rebindable keys, volume sliders, etc.
  *
  * <p>Press ESC or select "Back" to return.
@@ -44,10 +44,6 @@ public class OptionsState implements GameState {
     @Override
     public void enter() {
         backWasDown = false;
-    }
-
-    @Override
-    public void exit() {
     }
 
     @Override
@@ -115,8 +111,4 @@ public class OptionsState implements GameState {
         MenuRenderer.drawInfoLine(g2, footer, windowHeight - 40, windowWidth);
     }
 
-    @Override
-    public boolean isBlocking() {
-        return true;
-    }
 }

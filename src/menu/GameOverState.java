@@ -40,10 +40,6 @@ public class GameOverState implements GameState {
     }
 
     @Override
-    public void exit() {
-    }
-
-    @Override
     public void update(double deltaTime, InputHandler input) {
         if (input == null) {
             return;
@@ -108,8 +104,4 @@ public class GameOverState implements GameState {
         MenuRenderer.drawInfoLine(g2, footer, windowHeight - 40, windowWidth);
     }
 
-    @Override
-    public boolean isBlocking() {
-        return true;
-    }
 }

@@ -44,10 +44,6 @@ public class PauseState implements GameState {
     }
 
     @Override
-    public void exit() {
-    }
-
-    @Override
     public void update(double deltaTime, InputHandler input) {
         if (input == null) {
             return;
