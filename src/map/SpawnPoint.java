@@ -11,6 +11,9 @@ public class SpawnPoint {
 
     public Sector sector;
 
+    /** Enemy type name (e.g. "zombieman", "demon", "imp"). Null for non-enemy spawns. */
+    public String enemyType;
+
     public SpawnPoint(int id, SpawnType type, double x, double y, double angle) {
         this(id, type, new Vec2(x, y), angle, null);
     }

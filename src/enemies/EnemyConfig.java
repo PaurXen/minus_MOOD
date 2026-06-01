@@ -112,7 +112,7 @@ public class EnemyConfig {
                 400.0,    // attackRange (ranged)
                 1.2,      // attackCooldown
                 500.0,    // detectionRange
-                Math.PI / 2, // detectionAngle (90° cone)
+                Math.PI,  // detectionAngle (360°)
                 12.0,     // radius
                 56.0      // height
         );

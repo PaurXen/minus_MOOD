@@ -94,6 +94,8 @@ public final class LevelParser {
         SpawnPoint playerSpawn = parsePlayerSpawnV2(properties, mapData);
         mapData.addSpawnPoint(playerSpawn);
 
+        parseEnemySpawns(properties, mapData);
+
         Level level = new Level(metadata, mapData, playerSpawn);
 
         applyPlayerSettings(properties, level);
@@ -174,6 +176,26 @@ public final class LevelParser {
                 angle,
                 sector
         );
+    }
+
+    private static void parseEnemySpawns(Properties properties, MapData mapData) {
+        int enemySpawnCount = getInt(properties, "enemy_spawn_count", 0);
+
+        for (int i = 0; i < enemySpawnCount; i++) {
+            String key = "enemy_spawn_" + i;
+            String value = requireProperty(properties, key);
+
+            String[] parts = splitCsv(value, 4, key, "x,y,angle,enemy_type");
+
+            double x = parseDouble(parts[0], key, "x");
+            double y = parseDouble(parts[1], key, "y");
+            double angle = parseDouble(parts[2], key, "angle");
+            String enemyType = parts[3];
+
+            SpawnPoint spawn = new SpawnPoint(i, SpawnType.ENEMY, x, y, angle);
+            spawn.enemyType = enemyType;
+            mapData.addSpawnPoint(spawn);
+        }
     }
 
     private static void applyPlayerSettings(Properties properties, Level level) {

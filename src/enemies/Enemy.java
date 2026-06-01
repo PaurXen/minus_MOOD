@@ -10,7 +10,7 @@ import entities.EntityBody;
  * Adds health, state machine, and attack cooldown management.
  *
  * <p>Specific behaviors (chase, patrol, etc.) are implemented via the
- * {@code EnemyAI} strategy interface (to be added in Phase 2).
+ * {@code EnemyAI} strategy interface.
  */
 public class Enemy extends Entity {
 

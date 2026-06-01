@@ -1,106 +1,38 @@
 package menu;
 
-import input.InputHandler;
-
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-/**
- * Main menu / title screen.
- *
- * <p>Displays the game title and a simple option list.
- * Navigated with UP/DOWN arrows, confirmed with ENTER.
- *
- * <p>Options:
- * <ul>
- *   <li><b>New Game</b> — transitions to {@link PlayingState}</li>
- *   <li><b>Quit</b> — exits the application</li>
- * </ul>
- */
-public class MainMenuState implements GameState {
+public class MainMenuState extends AbstractMenuState {
 
     private static final String[] OPTIONS = { "New Game", "Options", "Quit" };
 
-    private final GameStateManager manager;
-    private final int windowWidth;
-    private final int windowHeight;
-
-    private int selectedIndex = 0;
-
-    // Prevent instant repeated input from a single key press
-    private boolean upWasDown;
-    private boolean downWasDown;
-
     public MainMenuState(GameStateManager manager, int windowWidth, int windowHeight) {
-        this.manager = manager;
-        this.windowWidth = windowWidth;
-        this.windowHeight = windowHeight;
+        super(manager, windowWidth, windowHeight);
     }
 
     @Override
-    public void enter() {
-        selectedIndex = 0;
-        upWasDown = false;
-        downWasDown = false;
+    protected int getOptionCount() {
+        return OPTIONS.length;
     }
 
     @Override
-    public void update(double deltaTime, InputHandler input) {
-        if (input == null) {
-            return;
-        }
-
-        // --- Menu navigation (edge-triggered: one press = one move) ---
-
-        if (input.menuUp) {
-            if (!upWasDown) {
-                selectedIndex = (selectedIndex - 1 + OPTIONS.length) % OPTIONS.length;
-                upWasDown = true;
-            }
-        } else {
-            upWasDown = false;
-        }
-
-        if (input.menuDown) {
-            if (!downWasDown) {
-                selectedIndex = (selectedIndex + 1) % OPTIONS.length;
-                downWasDown = true;
-            }
-        } else {
-            downWasDown = false;
-        }
-
-        // --- Confirm selection (one-shot consume) ---
-
-        if (input.consumeConfirm()) {
-            selectOption(selectedIndex);
-        }
-    }
-
-    private void selectOption(int index) {
+    protected void onConfirm(int index) {
         switch (index) {
-            // New Game — transition to gameplay
             case 0 -> manager.replace(new PlayingState(manager, windowWidth, windowHeight));
-            // Options — push on top of menu
             case 1 -> manager.push(new OptionsState(manager, windowWidth, windowHeight));
-            // Quit
             case 2 -> System.exit(0);
         }
     }
 
     @Override
     public void render(Graphics2D g2) {
-        // Background
         g2.setColor(Color.BLACK);
         g2.fillRect(0, 0, windowWidth, windowHeight);
 
-        // Title
         MenuRenderer.drawTitle(g2, "minus_MOOD", windowWidth);
-
-        // Menu options
         MenuRenderer.drawOptions(g2, OPTIONS, selectedIndex, windowWidth);
 
-        // Footer hint
         String footer = "UP/DOWN: select   ENTER: confirm";
         MenuRenderer.drawInfoLine(g2, footer, windowHeight - 40, windowWidth);
     }
