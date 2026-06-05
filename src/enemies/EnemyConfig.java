@@ -91,7 +91,7 @@ public class EnemyConfig {
         return new EnemyConfig(
                 "Demon",
                 150.0,    // health
-                80.0,     // moveSpeed
+                130.0,     // moveSpeed
                 20.0,     // attackDamage
                 30.0,     // attackRange (melee)
                 0.8,      // attackCooldown
@@ -107,7 +107,7 @@ public class EnemyConfig {
         return new EnemyConfig(
                 "Zombieman",
                 60.0,     // health
-                100.0,    // moveSpeed
+                150.0,    // moveSpeed
                 8.0,      // attackDamage
                 400.0,    // attackRange (ranged)
                 1.2,      // attackCooldown
@@ -123,14 +123,14 @@ public class EnemyConfig {
         return new EnemyConfig(
                 "Imp",
                 40.0,     // health
-                160.0,    // moveSpeed
+                180.0,    // moveSpeed
                 10.0,     // attackDamage
                 28.0,     // attackRange (melee)
                 0.5,      // attackCooldown
                 350.0,    // detectionRange
                 Math.PI,  // detectionAngle (360°)
                 10.0,     // radius
-                    48.0      // height
+                56.0      // height
         );
     }
 }
