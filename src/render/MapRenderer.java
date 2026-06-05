@@ -53,4 +53,8 @@ public class MapRenderer {
         }
         g2.setStroke(oldStroke);
     }
+
+    public GameWorld getGameWorld() {
+        return this.gameWorld;
+    }
 }
