@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.awt.RenderingHints;
 
 public class GameRenderer {
 
@@ -27,11 +28,17 @@ public class GameRenderer {
 
     private static final long DEATH_ANIMATION_MS = 600;
 
+    private BufferedImage weaponSprite;
+    private long weaponFireStartTime = -1;
+
+    private static final long WEAPON_FIRE_ANIMATION_MS = 180;
+
     private final IdentityHashMap<Enemy, Long> deathAnimationStart = new IdentityHashMap<>();
+    private final Map<String, BufferedImage> hudFaces = new HashMap<>();
 
     private final MapRenderer mapRenderer;
     private final DebugRenderer debugRenderer;
-    private final RaycastRenderer raycastRenderer;
+    private final RaycastRenderer raycastRenderer = new RaycastRenderer();
     private final GameWorld gameWorld;
 
     private final int windowWidth;
@@ -42,7 +49,6 @@ public class GameRenderer {
     public GameRenderer(GameWorld gameWorld, int windowWidth, int windowHeight) {
         this.mapRenderer = new MapRenderer(gameWorld, windowWidth, windowHeight);
         this.debugRenderer = new DebugRenderer(gameWorld, windowWidth);
-        this.raycastRenderer = new RaycastRenderer();
         this.gameWorld = gameWorld;
         this.windowWidth = windowWidth;
         this.windowHeight = windowHeight;
@@ -50,6 +56,12 @@ public class GameRenderer {
         loadEnemySprite("demon", "/sprites/demon.png");
         loadEnemySprite("zombieman", "/sprites/zombieman.png");
         loadEnemySprite("imp", "/sprites/imp.png");
+
+        loadHudFace("healthy", "/hud/face_healthy.png");
+        loadHudFace("hurt", "/hud/face_hurt.png");
+        loadHudFace("critical", "/hud/face_critical.png");
+        loadHudFace("dead", "/hud/face_dead.png");
+        loadWeaponSprite("/sprites/weapon.png");
     }
 
     public void render(Graphics2D g2,
@@ -73,7 +85,7 @@ public class GameRenderer {
                 enemies,
                 raycastRenderer.getZBuffer()
         );
-
+        drawWeapon(g2);
         drawPlayerHUD(g2, playerHealth);
 
         //if (showDebugText) {
@@ -89,6 +101,19 @@ public class GameRenderer {
         //    debugRenderer.drawMapDebug(g2);
         //}
     }
+    public void startPlayerShootAnimation() {
+        weaponFireStartTime = System.currentTimeMillis();
+    }
+
+    private void loadWeaponSprite(String path) {
+        try {
+            weaponSprite = ImageIO.read(
+                    getClass().getResourceAsStream(path)
+            );
+        } catch (IOException | IllegalArgumentException | NullPointerException e) {
+            System.err.println("Nie udało się wczytać sprite'a broni: " + path);
+        }
+    }
 
     private void loadEnemySprite(String id, String path) {
         try {
@@ -100,6 +125,26 @@ public class GameRenderer {
 
         } catch (IOException | IllegalArgumentException | NullPointerException e) {
             System.err.println("Nie udało się wczytać sprite'a: " + path);
+        }
+    }
+
+    private void loadHudFace(String id, String path) {
+
+        try {
+
+            BufferedImage image =
+                    ImageIO.read(
+                            getClass().getResourceAsStream(path)
+                    );
+
+            hudFaces.put(id, image);
+
+        } catch (IOException | IllegalArgumentException | NullPointerException e) {
+
+            System.err.println(
+                    "Nie udało się wczytać twarzy HUD: "
+                            + path
+            );
         }
     }
 
@@ -511,29 +556,71 @@ public class GameRenderer {
     }
 
     private void drawPlayerHUD(Graphics2D g2, double playerHealth) {
-        int barX = 20;
-        int barY = windowHeight - 40;
-        int barWidth = 200;
-        int barHeight = 16;
+        int hudHeight = 92;
+        int hudY = windowHeight - hudHeight;
 
-        EntityRenderer.fillHealthBar(
+        g2.setColor(new Color(35, 35, 35));
+        g2.fillRect(0, hudY, windowWidth, hudHeight);
+
+        g2.setColor(new Color(90, 90, 90));
+        g2.drawLine(0, hudY, windowWidth, hudY);
+
+        g2.setColor(new Color(15, 15, 15));
+        g2.fillRect(18, hudY + 14, 180, 60);
+
+        g2.setColor(new Color(80, 80, 80));
+        g2.drawRect(18, hudY + 14, 180, 60);
+
+        int hp = (int) Math.max(0, Math.min(100, playerHealth));
+
+        Color hpColor;
+        if (hp > 60) {
+            hpColor = new Color(40, 220, 70);
+        } else if (hp > 30) {
+            hpColor = new Color(230, 190, 40);
+        } else {
+            hpColor = new Color(230, 40, 30);
+        }
+
+        g2.setColor(Color.LIGHT_GRAY);
+        g2.drawString("HEALTH", 32, hudY + 34);
+
+        drawBigNumber(g2, hp, 36, hudY + 66, hpColor);
+        g2.setColor(hpColor);
+        g2.drawString("%", 128, hudY + 66);
+
+        drawFaceImage(
                 g2,
-                barX,
-                barY,
-                barWidth,
-                barHeight,
-                playerHealth / 100.0
+                windowWidth / 2 - 42,
+                hudY + 8,
+                84,
+                76,
+                hp
         );
 
-        g2.setColor(Color.WHITE);
-        g2.drawRect(barX, barY, barWidth, barHeight);
+        g2.setColor(new Color(15, 15, 15));
+        g2.fillRect(windowWidth - 198, hudY + 14, 180, 60);
 
-        String healthText = String.format("HP: %.0f / 100", playerHealth);
-        g2.drawString(healthText, barX, barY - 4);
+        g2.setColor(new Color(80, 80, 80));
+        g2.drawRect(windowWidth - 198, hudY + 14, 180, 60);
+
+        g2.setColor(Color.LIGHT_GRAY);
+        g2.drawString("STATUS", windowWidth - 178, hudY + 34);
+
+        if (hp <= 0) {
+            g2.setColor(new Color(180, 0, 0));
+            g2.drawString("DEAD", windowWidth - 178, hudY + 62);
+        } else if (hp < 30) {
+            g2.setColor(new Color(255, 60, 40));
+            g2.drawString("CRITICAL", windowWidth - 178, hudY + 62);
+        } else {
+            g2.setColor(new Color(80, 220, 80));
+            g2.drawString("OK", windowWidth - 178, hudY + 62);
+        }
 
         if (playerHealth < 30.0) {
             int alpha = (int) (
-                    60 + 40 * Math.sin(
+                    50 + 35 * Math.sin(
                             System.nanoTime() / 200_000_000.0
                     )
             );
@@ -549,5 +636,168 @@ public class GameRenderer {
 
             g2.fillRect(0, 0, windowWidth, windowHeight);
         }
+    }
+    private BufferedImage getHudFaceForHealth(int hp) {
+
+        if (hp <= 0) {
+            return hudFaces.get("dead");
+        }
+
+        if (hp < 25) {
+            return hudFaces.get("critical");
+        }
+
+        if (hp < 60) {
+            return hudFaces.get("hurt");
+        }
+
+        return hudFaces.get("healthy");
+    }
+
+    private void drawFaceImage(Graphics2D g2,
+                               int x,
+                               int y,
+                               int width,
+                               int height,
+                               int hp) {
+
+        g2.setColor(new Color(18, 18, 18));
+        g2.fillRect(x, y, width, height);
+
+        g2.setColor(new Color(100, 100, 100));
+        g2.drawRect(x, y, width, height);
+
+        BufferedImage face = getHudFaceForHealth(hp);
+
+        if (face == null) {
+
+            g2.setColor(Color.RED);
+            g2.drawString(
+                    "NO FACE",
+                    x + 8,
+                    y + height / 2
+            );
+
+            return;
+        }
+
+        g2.drawImage(
+                face,
+                x + 2,
+                y + 2,
+                width - 4,
+                height - 4,
+                null
+        );
+    }
+
+    private void drawWeapon(Graphics2D g2) {
+        if (weaponSprite == null) {
+            return;
+        }
+
+        long now = System.currentTimeMillis();
+
+        double fireProgress = 1.0;
+
+        if (weaponFireStartTime > 0) {
+            fireProgress =
+                    (double) (now - weaponFireStartTime)
+                            / WEAPON_FIRE_ANIMATION_MS;
+
+            if (fireProgress >= 1.0) {
+                fireProgress = 1.0;
+                weaponFireStartTime = -1;
+            }
+        }
+
+        double recoil = 0.0;
+
+        if (fireProgress < 1.0) {
+            recoil = Math.sin(fireProgress * Math.PI) * 36.0;
+        }
+
+        double weaponScale = 1.2;
+
+        int weaponWidth =
+                (int) ((windowWidth / 3.0) * weaponScale);
+
+        int weaponHeight =
+                (int) (
+                        weaponWidth
+                                * ((double) weaponSprite.getHeight()
+                                / weaponSprite.getWidth())
+                );
+
+        int weaponX = windowWidth / 2 - weaponWidth / 2;
+        int weaponY =
+                windowHeight
+                        - weaponHeight
+                        - 20
+                        + (int) recoil;
+
+        g2.setRenderingHint(
+                RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR
+        );
+
+        g2.drawImage(
+                weaponSprite,
+                weaponX,
+                weaponY,
+                weaponWidth,
+                weaponHeight,
+                null
+        );
+
+        if (fireProgress < 0.35) {
+            drawWeaponMuzzleFlash(
+                    g2,
+                    weaponX,
+                    weaponY,
+                    weaponWidth,
+                    weaponHeight
+            );
+        }
+    }
+
+    private void drawWeaponMuzzleFlash(Graphics2D g2,
+                                       int weaponX,
+                                       int weaponY,
+                                       int weaponWidth,
+                                       int weaponHeight) {
+
+        int flashSize = weaponWidth / 5;
+
+        int flashX = weaponX + weaponWidth / 2;
+        int flashY = weaponY + weaponHeight / 5;
+
+        g2.setColor(new Color(255, 220, 80, 170));
+        g2.fillOval(
+                flashX - flashSize / 2,
+                flashY - flashSize / 2,
+                flashSize,
+                flashSize
+        );
+
+        g2.setColor(new Color(255, 255, 255, 190));
+        g2.fillOval(
+                flashX - flashSize / 4,
+                flashY - flashSize / 4,
+                flashSize / 2,
+                flashSize / 2
+        );
+    }
+
+    private void drawBigNumber(Graphics2D g2,
+                               int value,
+                               int x,
+                               int y,
+                               Color color) {
+
+        g2.setColor(color);
+        g2.setFont(g2.getFont().deriveFont(28.0f));
+        g2.drawString(String.valueOf(value), x, y);
+        g2.setFont(g2.getFont().deriveFont(12.0f));
     }
 }

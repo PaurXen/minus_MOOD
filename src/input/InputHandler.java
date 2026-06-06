@@ -27,7 +27,7 @@ import java.awt.event.KeyListener;
 public class InputHandler implements KeyListener {
 
     private final KeyBindings bindings;
-
+    private boolean attackRequested = false;
     // --- Continuous (held) booleans ---
 
     /** W / move_forward */
@@ -69,6 +69,14 @@ public class InputHandler implements KeyListener {
         this.bindings = bindings;
     }
 
+    public boolean consumeAttackRequest() {
+        if (attackRequested) {
+            attackRequested = false;
+            return true;
+        }
+
+        return false;
+    }
     // ---------------------------------------------------------------
     // KeyListener implementation
     // ---------------------------------------------------------------
@@ -77,7 +85,6 @@ public class InputHandler implements KeyListener {
     public void keyPressed(KeyEvent e) {
         int keyCode = e.getKeyCode();
 
-        // One-shot keys — set request flag immediately
         if (keyCode == bindings.toggleDebug) {
             debugToggleRequested = true;
             return;
@@ -91,7 +98,10 @@ public class InputHandler implements KeyListener {
             return;
         }
 
-        // Continuous keys — set held flag
+        if (keyCode == bindings.attack && !attack) {
+            attackRequested = true;
+        }
+
         setKey(keyCode, true);
     }
 

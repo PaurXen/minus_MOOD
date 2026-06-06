@@ -64,36 +64,37 @@ public class PlayingState implements GameState {
             return;
         }
 
-        // --- Pause ---
         if (input.consumeCancel()) {
             manager.push(new PauseState(manager, windowWidth, windowHeight));
             return;
         }
 
-        // --- Debug toggle ---
         if (input.consumeDebugToggleRequest()) {
             showDebugText = !showDebugText;
         }
 
-        // --- Player ---
         gameWorld.update(input, deltaTime);
 
-        // --- Enemies ---
-        enemyManager.update(deltaTime,
+        enemyManager.update(
+                deltaTime,
                 gameWorld.getPlayer(),
                 gameWorld.getCollisionWorld(),
-                combat);
+                combat
+        );
 
-        // --- Death check ---
         if (combat.isPlayerDead()) {
             manager.push(new GameOverState(manager, windowWidth, windowHeight));
             return;
         }
 
-        // --- Combat (shooting) ---
         combat.update(deltaTime);
-        if (input.attack) {
-            combat.tryShoot(gameWorld.getPlayer(), enemyManager.getEnemies());
+
+        if (input.consumeAttackRequest()) {
+            renderer.startPlayerShootAnimation();
+            combat.tryShoot(
+                    gameWorld.getPlayer(),
+                    enemyManager.getEnemies()
+            );
         }
     }
 
