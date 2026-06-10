@@ -107,7 +107,7 @@ public class GameConfig {
             case "BACK_QUOTE", "`", "GRAVE" -> KeyEvent.VK_BACK_QUOTE;
 
             default -> {
-                System.out.println("Unknown key: " + keyName + ". Using W as fallback.");
+                System.out.println("Unknown key: " + keyName + ". Using VK_UNDEFINED as fallback.");
                 yield KeyEvent.VK_UNDEFINED;
             }
         };
