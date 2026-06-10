@@ -68,6 +68,8 @@ public class GameConfig {
         bindings.rotateRight = keyCode(properties.getProperty("rotate_right", "RIGHT"));
 
         bindings.attack = keyCode(properties.getProperty("attack", "SPACE"));
+        bindings.interact = keyCode(properties.getProperty("interact", "E"));
+        bindings.toggleMap = keyCode(properties.getProperty("toggle_map", "M"));
 
         bindings.menuUp = keyCode(properties.getProperty("menu_up", "UP"));
         bindings.menuDown = keyCode(properties.getProperty("menu_down", "DOWN"));
@@ -97,6 +99,7 @@ public class GameConfig {
             case "SHIFT" -> KeyEvent.VK_SHIFT;
             case "CONTROL", "CTRL" -> KeyEvent.VK_CONTROL;
             case "E" -> KeyEvent.VK_E;
+            case "M" -> KeyEvent.VK_M;
 
             case "ENTER", "RETURN" -> KeyEvent.VK_ENTER;
             case "ESCAPE", "ESC" -> KeyEvent.VK_ESCAPE;
@@ -104,8 +107,8 @@ public class GameConfig {
             case "BACK_QUOTE", "`", "GRAVE" -> KeyEvent.VK_BACK_QUOTE;
 
             default -> {
-                System.out.println("Unknown key: " + keyName + ". Using W as fallback.");
-                yield KeyEvent.VK_W;
+                System.out.println("Unknown key: " + keyName + ". Using VK_UNDEFINED as fallback.");
+                yield KeyEvent.VK_UNDEFINED;
             }
         };
     }

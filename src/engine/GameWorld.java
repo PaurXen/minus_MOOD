@@ -11,6 +11,7 @@ import map.Level;
 import map.LineDef;
 import map.MapData;
 import map.SpawnPoint;
+import map.LevelExit;
 
 import java.util.List;
 
@@ -19,30 +20,37 @@ public class GameWorld {
 
     private Level currentLevel;
     private Player player;
-
     private MapData mapData;
-
     private CollisionWorld collisionWorld;
     private CollisionBody playerBody;
 
     public GameWorld(GameSettings settings) {
+        this(settings, null);
+    }
+
+    public GameWorld(GameSettings settings, String levelPath) {
         if (settings == null) {
             throw new IllegalArgumentException("GameSettings cannot be null.");
         }
 
         this.settings = settings;
-        loadLevel(settings.defaultLevel);
+
+        String pathToLoad = levelPath;
+
+        if (pathToLoad == null || pathToLoad.trim().isEmpty()) {
+            pathToLoad = settings.defaultLevel;
+        }
+
+        loadLevel(pathToLoad);
     }
 
     public void loadLevel(String path) {
         currentLevel = LevelLoader.loadLevel(path, settings.levelFormatVersion);
 
         mapData = currentLevel.mapData;
-
         player = createPlayerFromLevel(currentLevel);
 
         collisionWorld = new CollisionWorld(mapData);
-
         playerBody = player.getBody();
     }
 
@@ -135,6 +143,14 @@ public class GameWorld {
         );
 
         player.setPosition(result.finalPosition);
+    }
+
+    public LevelExit getLevelExit() {
+        if (currentLevel == null) {
+            return null;
+        }
+
+        return currentLevel.levelExit;
     }
 
     public Level getCurrentLevel() {

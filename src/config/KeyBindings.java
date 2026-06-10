@@ -13,6 +13,10 @@ public class KeyBindings {
 
     // Combat
     public int attack;
+    // Interaction
+    public int interact;
+    // Map
+    public int toggleMap;
 
     // Menu navigation
     public int menuUp;
