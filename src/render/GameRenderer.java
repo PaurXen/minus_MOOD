@@ -347,98 +347,54 @@ public class GameRenderer {
                                    double distance,
                                    double deathProgress) {
 
-        Composite oldComposite = g2.getComposite();
+        int spriteWidth = endX - startX;
+        int spriteHeight = endY - startY;
+
+        if (spriteWidth <= 0 || spriteHeight <= 0) {
+            return;
+        }
+
+        float alpha = 1.0f;
+        Composite oldComposite = null;
+
+        if (enemy.getState() == EnemyState.DEATH) {
+            alpha = (float) Math.max(0.0, 1.0 - deathProgress);
+            oldComposite = g2.getComposite();
+            g2.setComposite(AlphaComposite.getInstance(
+                    AlphaComposite.SRC_OVER, alpha));
+        }
 
         try {
-            if (enemy.getState() == EnemyState.DEATH) {
-                float alpha = (float) Math.max(0.0, 1.0 - deathProgress);
+            int srcW = sprite.getWidth();
+            int srcH = sprite.getHeight();
 
-                g2.setComposite(
-                        AlphaComposite.getInstance(
-                                AlphaComposite.SRC_OVER,
-                                alpha
-                        )
-                );
-            }
-
-            int spriteWidth = endX - startX;
-            int spriteHeight = endY - startY;
-
-            if (spriteWidth <= 0 || spriteHeight <= 0) {
-                return;
-            }
-
+            // Draw one column at a time with z-buffer clipping.
+            // Each column is a single g.drawImage call — no per-pixel loops.
             for (int x = startX; x < endX; x++) {
+                if (x < 0 || x >= windowWidth) continue;
+                if (distance > zBuffer[x]) continue;
 
-                if (x < 0 || x >= windowWidth) {
-                    continue;
-                }
-
-                if (distance > zBuffer[x]) {
-                    continue;
-                }
+                // Clip column to screen bounds
+                int colStartY = Math.max(startY, 0);
+                int colEndY = Math.min(endY, windowHeight);
+                if (colEndY <= colStartY) continue;
 
                 double texXRatio = (double) (x - startX) / spriteWidth;
-                int texX = (int) (texXRatio * (sprite.getWidth() - 1));
+                int texX = (int) (texXRatio * (srcW - 1));
 
-                for (int y = startY; y < endY; y++) {
-
-                    if (y < 0 || y >= windowHeight) {
-                        continue;
-                    }
-
-                    double texYRatio = (double) (y - startY) / spriteHeight;
-                    int texY = (int) (texYRatio * (sprite.getHeight() - 1));
-
-                    int argb = sprite.getRGB(texX, texY);
-
-                    int alpha = (argb >> 24) & 0xff;
-
-                    if (alpha < 10) {
-                        continue;
-                    }
-
-                    Color pixel = new Color(argb, true);
-
-                    if (enemy.getState() == EnemyState.DEATH) {
-                        int red = (int) (
-                                pixel.getRed() * (1.0 - deathProgress)
-                                        + 255 * deathProgress
-                        );
-
-                        int green = (int) (
-                                pixel.getGreen() * (1.0 - deathProgress)
-                        );
-
-                        int blue = (int) (
-                                pixel.getBlue() * (1.0 - deathProgress)
-                        );
-
-                        pixel = new Color(
-                                Math.min(255, red),
-                                Math.max(0, green),
-                                Math.max(0, blue),
-                                alpha
-                        );
-                    }
-
-                    g2.setColor(pixel);
-                    g2.drawLine(x, y, x, y);
-                }
+                // Draw one column of the sprite, scaled to fit
+                g2.drawImage(sprite,
+                        x, colStartY, x + 1, colEndY,       // dest rect
+                        texX, 0, texX + 1, srcH,             // source rect
+                        null);
             }
-
-            drawZombiemanMuzzleFlash(
-                    g2,
-                    enemy,
-                    startX,
-                    endX,
-                    startY,
-                    endY
-            );
-
         } finally {
-            g2.setComposite(oldComposite);
+            if (oldComposite != null) {
+                g2.setComposite(oldComposite);
+            }
         }
+
+        drawZombiemanMuzzleFlash(g2, enemy, startX, endX, startY, endY);
     }
 
     private void drawZombiemanMuzzleFlash(Graphics2D g2,

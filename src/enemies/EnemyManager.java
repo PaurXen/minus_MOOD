@@ -54,11 +54,10 @@ public class EnemyManager {
 
             enemyAI.update(enemy, player, collision, deltaTime);
 
+            // AI already verified LOS before entering ATTACK state
             if (enemy.getState() == EnemyState.ATTACK && enemy.canAttack()) {
                 double dist = enemy.getPosition().distanceTo(player.getPosition());
-                if (dist <= enemy.getAttackRange()
-                        && BasicChaseAI.hasLineOfSight(
-                            enemy.getPosition(), player.getPosition(), collision)) {
+                if (dist <= enemy.getAttackRange()) {
                     combat.applyEnemyAttack(enemy);
                 }
             }

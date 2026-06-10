@@ -16,13 +16,17 @@ public class RaycastRenderer {
     private static final double FOV = Math.toRadians(60.0);
 
     private double[] zBuffer;
+    private int[] columnPixels;
+    private BufferedImage columnBuffer;
+    private int lastScreenWidth;
+    private int lastScreenHeight;
 
     private final Map<String, BufferedImage> textures = new HashMap<>();
 
     public RaycastRenderer() {
         textures.put("wall_default", createBrickTexture());
-        textures.put("floor_default", createBrickTexture());
-        textures.put("ceiling_default", createBrickTexture());
+        textures.put("floor_default", textures.get("wall_default"));
+        textures.put("ceiling_default", textures.get("wall_default"));
     }
 
     public double[] getZBuffer() {
@@ -36,7 +40,7 @@ public class RaycastRenderer {
             int screenWidth,
             int screenHeight
     ) {
-        zBuffer = new double[screenWidth];
+        ensureBuffers(screenWidth, screenHeight);
 
         g.setColor(new Color(45, 45, 45));
         g.fillRect(0, 0, screenWidth, screenHeight / 2);
@@ -46,10 +50,9 @@ public class RaycastRenderer {
 
         for (int x = 0; x < screenWidth; x++) {
 
-            double rayAngle =
-                    player.angle
-                            - FOV / 2.0
-                            + ((double) x / screenWidth) * FOV;
+            double rayAngle = player.angle
+                    - FOV / 2.0
+                    + ((double) x / screenWidth) * FOV;
 
             double rayDirX = Math.cos(rayAngle);
             double rayDirY = Math.sin(rayAngle);
@@ -58,20 +61,15 @@ public class RaycastRenderer {
             LineDef hitWall = null;
 
             for (LineDef wall : walls) {
-
                 if (!wall.blocksRay()) {
                     continue;
                 }
 
                 double hit = raySegmentIntersection(
-                        player.getX(),
-                        player.getY(),
-                        rayDirX,
-                        rayDirY,
-                        wall.start.x,
-                        wall.start.y,
-                        wall.end.x,
-                        wall.end.y
+                        player.getX(), player.getY(),
+                        rayDirX, rayDirY,
+                        wall.start.x, wall.start.y,
+                        wall.end.x, wall.end.y
                 );
 
                 if (hit > 0 && hit < nearestDistance) {
@@ -85,9 +83,8 @@ public class RaycastRenderer {
                 continue;
             }
 
-            double correctedDistance =
-                    nearestDistance *
-                            Math.cos(rayAngle - player.angle);
+            double correctedDistance = nearestDistance
+                    * Math.cos(rayAngle - player.angle);
 
             if (correctedDistance < 1.0) {
                 correctedDistance = 1.0;
@@ -96,61 +93,54 @@ public class RaycastRenderer {
             zBuffer[x] = correctedDistance;
 
             double wallWorldHeight = 128.0;
-
             Sector sector = hitWall.frontSector;
             if (sector != null) {
                 wallWorldHeight = sector.getHeight();
             }
 
-            int wallHeight =
-                    (int) ((wallWorldHeight * screenHeight)
-                            / correctedDistance);
+            int wallHeight = (int) ((wallWorldHeight * screenHeight)
+                    / correctedDistance);
 
             int startY = screenHeight / 2 - wallHeight / 2;
             int endY = startY + wallHeight;
 
-            int shade =
-                    Math.max(
-                            60,
-                            255 - (int) (correctedDistance * 0.08)
-                    );
+            int shade = Math.max(60,
+                    255 - (int) (correctedDistance * 0.08));
 
-            double hitX =
-                    player.getX() + rayDirX * nearestDistance;
-
-            double hitY =
-                    player.getY() + rayDirY * nearestDistance;
-
-            BufferedImage texture =
-                    getWallTexture(hitWall);
+            double hitX = player.getX() + rayDirX * nearestDistance;
+            double hitY = player.getY() + rayDirY * nearestDistance;
 
             drawTexturedWallColumn(
-                    g,
-                    x,
-                    startY,
-                    endY,
-                    screenHeight,
-                    hitWall,
-                    hitX,
-                    hitY,
-                    texture,
-                    shade
+                    g, x, startY, endY, screenHeight,
+                    hitWall, hitX, hitY, shade
             );
         }
     }
 
+    private void ensureBuffers(int screenWidth, int screenHeight) {
+        if (zBuffer == null || zBuffer.length != screenWidth) {
+            zBuffer = new double[screenWidth];
+            lastScreenWidth = screenWidth;
+        }
+        if (columnPixels == null || columnPixels.length < screenHeight) {
+            columnPixels = new int[screenHeight];
+        }
+        if (columnBuffer == null
+                || columnBuffer.getHeight() < screenHeight
+                || columnBuffer.getWidth() < 1) {
+            columnBuffer = new BufferedImage(
+                    1, screenHeight, BufferedImage.TYPE_INT_RGB);
+        }
+        lastScreenHeight = screenHeight;
+    }
+
     private BufferedImage getWallTexture(LineDef wall) {
         String materialId = "wall_default";
-
         if (wall.frontSide != null
                 && wall.frontSide.middleMaterialId != null) {
             materialId = wall.frontSide.middleMaterialId;
         }
-
-        return textures.getOrDefault(
-                materialId,
-                textures.get("wall_default")
-        );
+        return textures.getOrDefault(materialId, textures.get("wall_default"));
     }
 
     private void drawTexturedWallColumn(
@@ -162,9 +152,10 @@ public class RaycastRenderer {
             LineDef wall,
             double hitX,
             double hitY,
-            BufferedImage texture,
             int shade
     ) {
+        BufferedImage texture = getWallTexture(wall);
+
         if (texture == null) {
             g.setColor(new Color(shade, shade, shade));
             g.drawLine(screenX, startY, screenX, endY);
@@ -173,170 +164,116 @@ public class RaycastRenderer {
 
         double wallDx = wall.end.x - wall.start.x;
         double wallDy = wall.end.y - wall.start.y;
+        double wallLength = Math.sqrt(wallDx * wallDx + wallDy * wallDy);
 
-        double wallLengthSquared =
-                wallDx * wallDx + wallDy * wallDy;
-
-        if (wallLengthSquared <= 0.00001) {
+        if (wallLength <= 0.00001) {
             return;
         }
 
         double hitDx = hitX - wall.start.x;
         double hitDy = hitY - wall.start.y;
-
-        double distanceAlongWall =
-                (hitDx * wallDx + hitDy * wallDy)
-                        / Math.sqrt(wallLengthSquared);
+        double distanceAlongWall = (hitDx * wallDx + hitDy * wallDy) / wallLength;
 
         double textureWorldSize = 64.0;
+        double tiledU = (distanceAlongWall / textureWorldSize)
+                - Math.floor(distanceAlongWall / textureWorldSize);
 
-        double tiledU =
-                (distanceAlongWall / textureWorldSize)
-                        - Math.floor(distanceAlongWall / textureWorldSize);
-
-        int texX =
-                (int) (tiledU * (texture.getWidth() - 1));
+        int texX = (int) (tiledU * (texture.getWidth() - 1));
+        int texWidth = texture.getWidth();
+        int texHeight = texture.getHeight();
 
         int visibleStartY = Math.max(startY, 0);
         int visibleEndY = Math.min(endY, screenHeight - 1);
-
         int projectedHeight = endY - startY;
 
-        if (projectedHeight <= 0) {
+        if (projectedHeight <= 0 || visibleEndY < visibleStartY) {
             return;
         }
 
-        for (int y = visibleStartY; y <= visibleEndY; y++) {
+        int colHeight = visibleEndY - visibleStartY + 1;
 
-            double texYRatio =
-                    (double) (y - startY) / projectedHeight;
+        // Bit-shift shade factor
+        int sfR = shade;
+        int sfG = shade;
+        int sfB = shade;
 
-            int texY =
-                    (int) (texYRatio * (texture.getHeight() - 1));
+        // Pre-fetch texture row to avoid per-pixel getRGB overhead
+        // Build the column in one pass with raw int manipulation
+        for (int i = 0; i < colHeight; i++) {
+            double texYRatio = (double) (visibleStartY + i - startY) / projectedHeight;
+            int texY = (int) (texYRatio * (texHeight - 1));
 
             int rgb = texture.getRGB(texX, texY);
 
-            Color texColor = new Color(rgb);
+            int r = (((rgb >> 16) & 0xFF) * sfR) / 255;
+            int gr = (((rgb >> 8) & 0xFF) * sfG) / 255;
+            int b = ((rgb & 0xFF) * sfB) / 255;
 
-            int r = texColor.getRed() * shade / 255;
-            int gr = texColor.getGreen() * shade / 255;
-            int b = texColor.getBlue() * shade / 255;
-
-            g.setColor(new Color(r, gr, b));
-            g.drawLine(screenX, y, screenX, y);
+            columnPixels[i] = (r << 16) | (gr << 8) | b;
         }
+
+        // Draw entire column in one native call
+        columnBuffer.setRGB(0, 0, 1, colHeight, columnPixels, 0, 1);
+        g.drawImage(columnBuffer,
+                screenX, visibleStartY,
+                screenX + 1, visibleEndY + 1,
+                0, 0, 1, colHeight,
+                null);
     }
 
     private BufferedImage createBrickTexture() {
-
         int size = 64;
-
-        BufferedImage image =
-                new BufferedImage(
-                        size,
-                        size,
-                        BufferedImage.TYPE_INT_RGB
-                );
-
+        BufferedImage image = new BufferedImage(
+                size, size, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = image.createGraphics();
 
-        // tło cegieł
         g.setColor(new Color(130, 45, 35));
         g.fillRect(0, 0, size, size);
 
         int brickWidth = 16;
         int brickHeight = 4;
 
-        // fugi
         g.setColor(new Color(70, 20, 20));
-
         for (int y = 0; y < size; y += brickHeight) {
-
             g.drawLine(0, y, size, y);
-
-            int offset =
-                    ((y / brickHeight) % 2 == 0)
-                            ? 0
-                            : brickWidth / 2;
-
+            int offset = ((y / brickHeight) % 2 == 0) ? 0 : brickWidth / 2;
             for (int x = -offset; x < size; x += brickWidth) {
-                g.drawLine(
-                        x,
-                        y,
-                        x,
-                        y + brickHeight
-                );
+                g.drawLine(x, y, x, y + brickHeight);
             }
         }
 
-        // wnętrze cegieł
         g.setColor(new Color(170, 65, 50));
-
         for (int y = 1; y < size; y += brickHeight) {
-
-            int offset =
-                    ((y / brickHeight) % 2 == 0)
-                            ? 0
-                            : brickWidth / 2;
-
+            int offset = ((y / brickHeight) % 2 == 0) ? 0 : brickWidth / 2;
             for (int x = -offset + 1; x < size; x += brickWidth) {
-
-                g.fillRect(
-                        x,
-                        y,
-                        brickWidth - 2,
-                        brickHeight - 1
-                );
+                g.fillRect(x, y, brickWidth - 2, brickHeight - 1);
             }
         }
 
         g.dispose();
-
         return image;
     }
 
     private double raySegmentIntersection(
-            double rx,
-            double ry,
-            double rdx,
-            double rdy,
-            double x1,
-            double y1,
-            double x2,
-            double y2
+            double rx, double ry,
+            double rdx, double rdy,
+            double x1, double y1,
+            double x2, double y2
     ) {
         double sdx = x2 - x1;
         double sdy = y2 - y1;
 
-        double denom =
-                rdx * sdy - rdy * sdx;
-
+        double denom = rdx * sdy - rdy * sdx;
         if (Math.abs(denom) < 0.00001) {
             return -1;
         }
 
-        double t =
-                ((x1 - rx) * sdy
-                        - (y1 - ry) * sdx)
-                        / denom;
-
-        double u =
-                ((x1 - rx) * rdy
-                        - (y1 - ry) * rdx)
-                        / denom;
+        double t = ((x1 - rx) * sdy - (y1 - ry) * sdx) / denom;
+        double u = ((x1 - rx) * rdy - (y1 - ry) * rdx) / denom;
 
         if (t >= 0 && u >= 0 && u <= 1) {
             return t;
         }
-
         return -1;
-    }
-
-    private double clamp(
-            double value,
-            double min,
-            double max
-    ) {
-        return Math.max(min, Math.min(max, value));
     }
 }
