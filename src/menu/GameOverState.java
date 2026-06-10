@@ -4,11 +4,21 @@ import java.awt.Color;
 import java.awt.Graphics2D;
 
 public class GameOverState extends AbstractMenuState {
+    private static final String[] OPTIONS = {
+            "Retry",
+            "Main Menu"
+    };
 
-    private static final String[] OPTIONS = { "Retry", "Main Menu" };
+    private final String levelPath;
 
-    public GameOverState(GameStateManager manager, int windowWidth, int windowHeight) {
+    public GameOverState(
+            GameStateManager manager,
+            int windowWidth,
+            int windowHeight,
+            String levelPath
+    ) {
         super(manager, windowWidth, windowHeight);
+        this.levelPath = levelPath;
     }
 
     @Override
@@ -21,11 +31,25 @@ public class GameOverState extends AbstractMenuState {
         switch (index) {
             case 0 -> {
                 manager.pop();
-                manager.replace(new PlayingState(manager, windowWidth, windowHeight));
+                manager.replace(
+                        new PlayingState(
+                                manager,
+                                windowWidth,
+                                windowHeight,
+                                levelPath
+                        )
+                );
             }
+
             case 1 -> {
                 manager.pop();
-                manager.replace(new MainMenuState(manager, windowWidth, windowHeight));
+                manager.replace(
+                        new MainMenuState(
+                                manager,
+                                windowWidth,
+                                windowHeight
+                        )
+                );
             }
         }
     }
@@ -38,7 +62,7 @@ public class GameOverState extends AbstractMenuState {
         MenuRenderer.drawTitle(g2, "YOU DIED", windowWidth);
         MenuRenderer.drawOptions(g2, OPTIONS, selectedIndex, windowWidth);
 
-        String footer = "UP/DOWN: select   ENTER: confirm";
+        String footer = "UP/DOWN: select  ENTER: confirm";
         MenuRenderer.drawInfoLine(g2, footer, windowHeight - 40, windowWidth);
     }
 }
