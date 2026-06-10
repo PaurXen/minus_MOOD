@@ -67,6 +67,7 @@ public class GameConfig {
         bindings.rotateLeft = keyCode(properties.getProperty("rotate_left", "LEFT"));
         bindings.rotateRight = keyCode(properties.getProperty("rotate_right", "RIGHT"));
 
+        bindings.interact = keyCode(properties.getProperty("interact", "E"));
         bindings.attack = keyCode(properties.getProperty("attack", "SPACE"));
 
         bindings.menuUp = keyCode(properties.getProperty("menu_up", "UP"));

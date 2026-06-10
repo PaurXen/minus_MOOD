@@ -7,6 +7,7 @@ import enemies.EnemyManager;
 import engine.GameWorld;
 import input.InputHandler;
 import render.GameRenderer;
+import map.LevelExit;
 
 import java.awt.Graphics2D;
 
@@ -86,6 +87,8 @@ public class PlayingState implements GameState {
                 combat
         );
 
+        updateLevelExit(input);
+
         if (combat.isPlayerDead()) {
             manager.push(new GameOverState(manager, windowWidth, windowHeight, levelPath));
             return;
@@ -114,5 +117,29 @@ public class PlayingState implements GameState {
                 settings.gameVersion,
                 settings.gameBuild
         );
+    }
+
+    private void updateLevelExit(InputHandler input) {
+        LevelExit levelExit = gameWorld.getLevelExit();
+
+        if (levelExit == null) {
+            return;
+        }
+
+        boolean allEnemiesDead = enemyManager.getAliveCount() == 0;
+        levelExit.setUnlocked(allEnemiesDead);
+
+        if (!input.consumeInteract()) {
+            return;
+        }
+
+        boolean playerNearExit = levelExit.isInRange(
+                gameWorld.getPlayer().getX(),
+                gameWorld.getPlayer().getY()
+        );
+
+        if (playerNearExit && levelExit.isUnlocked()) {
+            manager.replace(new MainMenuState(manager, windowWidth, windowHeight));
+        }
     }
 }

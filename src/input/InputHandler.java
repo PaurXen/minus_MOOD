@@ -43,6 +43,8 @@ public class InputHandler implements KeyListener {
     public boolean rotateLeft;
     /** RIGHT / rotate_right */
     public boolean rotateRight;
+    /** E / interact */
+    private boolean interactRequested = false;
 
     /** SPACE / attack */
     public boolean attack;
@@ -98,6 +100,10 @@ public class InputHandler implements KeyListener {
             return;
         }
 
+        if (keyCode == bindings.interact) {
+            interactRequested = true;
+            return;
+        }
         if (keyCode == bindings.attack && !attack) {
             attackRequested = true;
         }
@@ -177,6 +183,15 @@ public class InputHandler implements KeyListener {
             cancelRequested = false;
             return true;
         }
+        return false;
+    }
+
+    public boolean consumeInteract() {
+        if (interactRequested) {
+            interactRequested = false;
+            return true;
+        }
+
         return false;
     }
 }

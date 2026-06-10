@@ -3,6 +3,7 @@ package render;
 import enemies.Enemy;
 import enemies.EnemyState;
 import engine.GameWorld;
+import map.LevelExit;
 
 import javax.imageio.ImageIO;
 import java.awt.AlphaComposite;
@@ -78,6 +79,12 @@ public class GameRenderer {
                 gameWorld.getMapLines(),
                 windowWidth,
                 windowHeight
+        );
+
+        drawLevelExit(
+                g2,
+                gameWorld.getLevelExit(),
+                raycastRenderer.getZBuffer()
         );
 
         drawEnemySprites(
@@ -755,5 +762,114 @@ public class GameRenderer {
         g2.setFont(g2.getFont().deriveFont(28.0f));
         g2.drawString(String.valueOf(value), x, y);
         g2.setFont(g2.getFont().deriveFont(12.0f));
+    }
+
+    private void drawLevelExit(Graphics2D g2, LevelExit exit, double[] zBuffer) {
+        if (exit == null || gameWorld.getPlayer() == null || zBuffer == null) {
+            return;
+        }
+
+        var player = gameWorld.getPlayer();
+
+        double dx = exit.getX() - player.getX();
+        double dy = exit.getY() - player.getY();
+
+        double rawDistance = Math.sqrt(dx * dx + dy * dy);
+
+        if (rawDistance < 1.0) {
+            return;
+        }
+
+        double angleToExit = Math.atan2(dy, dx);
+        double relativeAngle = normalizeAngle(angleToExit - player.angle);
+        double halfFov = FOV / 2.0;
+
+        if (Math.abs(relativeAngle) > halfFov) {
+            return;
+        }
+
+        double correctedDistance = rawDistance * Math.cos(relativeAngle);
+
+        if (correctedDistance < 1.0) {
+            return;
+        }
+
+        int screenX = (int) (((relativeAngle + halfFov) / FOV) * windowWidth);
+
+        int exitHeight = (int) ((96.0 * windowHeight) / correctedDistance);
+        int exitWidth = Math.max(8, exitHeight / 3);
+
+        int projectedFloorY = calculateProjectedFloorY(correctedDistance);
+
+        int startX = screenX - exitWidth / 2;
+        int endX = screenX + exitWidth / 2;
+        int endY = projectedFloorY;
+        int startY = endY - exitHeight;
+
+        Color mainColor = exit.isUnlocked()
+                ? new Color(40, 220, 70)
+                : new Color(220, 40, 40);
+
+        Color glowColor = exit.isUnlocked()
+                ? new Color(80, 255, 120, 90)
+                : new Color(255, 80, 80, 90);
+
+        for (int x = startX; x < endX; x++) {
+            if (x < 0 || x >= windowWidth) {
+                continue;
+            }
+
+            if (correctedDistance > zBuffer[x]) {
+                continue;
+            }
+
+            g2.setColor(mainColor);
+            g2.drawLine(x, startY, x, endY);
+        }
+
+        int glowWidth = exitWidth * 2;
+        int glowHeight = exitHeight / 3;
+
+        g2.setColor(glowColor);
+        g2.fillOval(
+                screenX - glowWidth / 2,
+                startY - glowHeight / 3,
+                glowWidth,
+                glowHeight
+        );
+    }
+
+    private void drawLevelExitPrompt(Graphics2D g2, LevelExit exit) {
+        if (exit == null || gameWorld.getPlayer() == null) {
+            return;
+        }
+
+        boolean playerNearExit = exit.isInRange(
+                gameWorld.getPlayer().getX(),
+                gameWorld.getPlayer().getY()
+        );
+
+        if (!playerNearExit) {
+            return;
+        }
+
+        String text = exit.isUnlocked()
+                ? "Press E to return to menu"
+                : "LOCKED - kill all enemies first";
+
+        int boxWidth = 320;
+        int boxHeight = 36;
+        int boxX = windowWidth / 2 - boxWidth / 2;
+        int boxY = windowHeight - 140;
+
+        g2.setColor(new Color(0, 0, 0, 170));
+        g2.fillRect(boxX, boxY, boxWidth, boxHeight);
+
+        g2.setColor(exit.isUnlocked()
+                ? new Color(80, 255, 120)
+                : new Color(255, 80, 80));
+
+        g2.drawRect(boxX, boxY, boxWidth, boxHeight);
+        g2.drawString(text, boxX + 22, boxY + 23);
     }
 }

@@ -10,6 +10,8 @@ public class Level {
 
     public SpawnPoint playerSpawn;
 
+    public LevelExit levelExit;
+
     public double playerMoveSpeed = 180.0;
     public double playerRotationSpeed = 2.5;
     public double playerRadius = 6.0;

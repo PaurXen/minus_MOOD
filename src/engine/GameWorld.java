@@ -11,6 +11,7 @@ import map.Level;
 import map.LineDef;
 import map.MapData;
 import map.SpawnPoint;
+import map.LevelExit;
 
 import java.util.List;
 
@@ -142,6 +143,14 @@ public class GameWorld {
         );
 
         player.setPosition(result.finalPosition);
+    }
+
+    public LevelExit getLevelExit() {
+        if (currentLevel == null) {
+            return null;
+        }
+
+        return currentLevel.levelExit;
     }
 
     public Level getCurrentLevel() {

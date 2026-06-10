@@ -13,6 +13,7 @@ import map.SpawnPoint;
 import map.SpawnType;
 import map.Vertex;
 import map.Wall;
+import map.LevelExit;
 
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -97,9 +98,8 @@ public final class LevelParser {
         parseEnemySpawns(properties, mapData);
 
         Level level = new Level(metadata, mapData, playerSpawn);
-
         applyPlayerSettings(properties, level);
-
+        parseLevelExit(properties, level);
         return MapCompiler.compile(level);
     }
 
@@ -418,6 +418,22 @@ public final class LevelParser {
         }
 
         return flags;
+    }
+
+    private static void parseLevelExit(Properties properties, Level level) {
+        String value = properties.getProperty("level_exit");
+
+        if (value == null || value.trim().isEmpty()) {
+            return;
+        }
+
+        String[] parts = splitCsv(value, 3, "level_exit", "x,y,radius");
+
+        double x = parseDouble(parts[0], "level_exit", "x");
+        double y = parseDouble(parts[1], "level_exit", "y");
+        double radius = parseDouble(parts[2], "level_exit", "radius");
+
+        level.levelExit = new LevelExit(x, y, radius);
     }
 
     private static Vertex requireVertex(MapData mapData, int id, String ownerKey) {
