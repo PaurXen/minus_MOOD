@@ -108,7 +108,7 @@ public class GameConfig {
 
             default -> {
                 System.out.println("Unknown key: " + keyName + ". Using W as fallback.");
-                yield KeyEvent.VK_W;
+                yield KeyEvent.VK_UNDEFINED;
             }
         };
     }
