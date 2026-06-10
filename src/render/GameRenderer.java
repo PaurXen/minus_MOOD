@@ -111,15 +111,8 @@ public class GameRenderer {
             );
         }
 
-        if (showDebugText) {
-            debugRenderer.drawDebugInfo(
-                    g2,
-                    enemies,
-                    playerHealth,
-                    gameTitle,
-                    gameVersion,
-                    gameBuild
-            );
+        if (!showMap) {
+            drawLevelExitPrompt(g2, gameWorld.getLevelExit());
         }
     }
     public void startPlayerShootAnimation() {
