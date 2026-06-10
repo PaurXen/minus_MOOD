@@ -43,11 +43,13 @@ public class InputHandler implements KeyListener {
     public boolean rotateLeft;
     /** RIGHT / rotate_right */
     public boolean rotateRight;
-    /** E / interact */
-    private boolean interactRequested = false;
 
     /** SPACE / attack */
     public boolean attack;
+    /** E / interact */
+    private boolean interactRequested = false;
+    /** M / toggle_map */
+    private boolean mapToggleRequested = false;
 
     /** UP / menu_up */
     public boolean menuUp;
@@ -100,12 +102,16 @@ public class InputHandler implements KeyListener {
             return;
         }
 
+        if (keyCode == bindings.attack && !attack) {
+            attackRequested = true;
+        }
         if (keyCode == bindings.interact) {
             interactRequested = true;
             return;
         }
-        if (keyCode == bindings.attack && !attack) {
-            attackRequested = true;
+        if (keyCode == bindings.toggleMap) {
+            mapToggleRequested = true;
+            return;
         }
 
         setKey(keyCode, true);
@@ -189,6 +195,15 @@ public class InputHandler implements KeyListener {
     public boolean consumeInteract() {
         if (interactRequested) {
             interactRequested = false;
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean consumeMapToggleRequest() {
+        if (mapToggleRequested) {
+            mapToggleRequested = false;
             return true;
         }
 

@@ -7,15 +7,16 @@ public class KeyBindings {
     public int strafeLeft;
     public int strafeRight;
 
-    // Interaction
-    public int interact;
-
     // Rotation
     public int rotateLeft;
     public int rotateRight;
 
     // Combat
     public int attack;
+    // Interaction
+    public int interact;
+    // Map
+    public int toggleMap;
 
     // Menu navigation
     public int menuUp;

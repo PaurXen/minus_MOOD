@@ -69,6 +69,7 @@ public class GameRenderer {
                        List<Enemy> enemies,
                        double playerHealth,
                        boolean showDebugText,
+                       boolean showMap,
                        String gameTitle,
                        String gameVersion,
                        String gameBuild) {
@@ -95,18 +96,31 @@ public class GameRenderer {
         drawWeapon(g2);
         drawPlayerHUD(g2, playerHealth);
 
-        //if (showDebugText) {
-        //    debugRenderer.drawDebugInfo(
-        //            g2,
-        //            enemies,
-        //            playerHealth,
-        //            gameTitle,
-        //            gameVersion,
-        //            gameBuild
-        //    );
-//
-        //    debugRenderer.drawMapDebug(g2);
-        //}
+        if (showMap) {
+            mapRenderer.drawOverlayMap(g2, enemies);
+        }
+
+        if (showDebugText) {
+            debugRenderer.drawDebugInfo(
+                    g2,
+                    enemies,
+                    playerHealth,
+                    gameTitle,
+                    gameVersion,
+                    gameBuild
+            );
+        }
+
+        if (showDebugText) {
+            debugRenderer.drawDebugInfo(
+                    g2,
+                    enemies,
+                    playerHealth,
+                    gameTitle,
+                    gameVersion,
+                    gameBuild
+            );
+        }
     }
     public void startPlayerShootAnimation() {
         weaponFireStartTime = System.currentTimeMillis();

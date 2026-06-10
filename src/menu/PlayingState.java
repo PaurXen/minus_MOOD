@@ -26,6 +26,7 @@ public class PlayingState implements GameState {
     private final String levelPath;
 
     private boolean showDebugText;
+    private boolean showMap;
 
     public PlayingState(GameStateManager manager, int windowWidth, int windowHeight) {
         this(manager, windowWidth, windowHeight, null);
@@ -78,6 +79,10 @@ public class PlayingState implements GameState {
             showDebugText = !showDebugText;
         }
 
+        if (input.consumeMapToggleRequest()) {
+            showMap = !showMap;
+        }
+
         gameWorld.update(input, deltaTime);
 
         enemyManager.update(
@@ -113,6 +118,7 @@ public class PlayingState implements GameState {
                 enemyManager.getEnemies(),
                 combat.getPlayerHealth(),
                 showDebugText,
+                showMap,
                 settings.gameTitle,
                 settings.gameVersion,
                 settings.gameBuild

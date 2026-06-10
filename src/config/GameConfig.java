@@ -67,8 +67,9 @@ public class GameConfig {
         bindings.rotateLeft = keyCode(properties.getProperty("rotate_left", "LEFT"));
         bindings.rotateRight = keyCode(properties.getProperty("rotate_right", "RIGHT"));
 
-        bindings.interact = keyCode(properties.getProperty("interact", "E"));
         bindings.attack = keyCode(properties.getProperty("attack", "SPACE"));
+        bindings.interact = keyCode(properties.getProperty("interact", "E"));
+        bindings.toggleMap = keyCode(properties.getProperty("toggle_map", "M"));
 
         bindings.menuUp = keyCode(properties.getProperty("menu_up", "UP"));
         bindings.menuDown = keyCode(properties.getProperty("menu_down", "DOWN"));
@@ -98,6 +99,7 @@ public class GameConfig {
             case "SHIFT" -> KeyEvent.VK_SHIFT;
             case "CONTROL", "CTRL" -> KeyEvent.VK_CONTROL;
             case "E" -> KeyEvent.VK_E;
+            case "M" -> KeyEvent.VK_M;
 
             case "ENTER", "RETURN" -> KeyEvent.VK_ENTER;
             case "ESCAPE", "ESC" -> KeyEvent.VK_ESCAPE;
