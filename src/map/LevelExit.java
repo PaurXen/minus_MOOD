@@ -8,6 +8,10 @@ public class LevelExit {
     private boolean unlocked;
 
     public LevelExit(double x, double y, double radius) {
+        if (radius <= 0) {
+            throw new IllegalArgumentException("radius must be > 0");
+        }
+
         this.x = x;
         this.y = y;
         this.radius = radius;
